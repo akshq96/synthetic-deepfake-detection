@@ -4,7 +4,6 @@ import { ConfidenceGauge } from "@/components/ConfidenceGauge";
 import { PageHeader } from "@/components/PageHeader";
 import { ErrorState, LoadingState } from "@/components/QueryState";
 import { Button } from "@/components/ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { api } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
 import { Download } from "lucide-react";
@@ -29,13 +28,16 @@ export default function ReportDetailPage() {
   });
 
   if (reportQuery.isLoading) return <LoadingState />;
-  if (reportQuery.isError) return <ErrorState error={reportQuery.error} />;
+  if (reportQuery.isError) {
+    return <ErrorState error={reportQuery.error} title="Unable to load this report" onRetry={() => reportQuery.refetch()} />;
+  }
   if (!reportQuery.data) return null;
 
   return (
     <div>
       <PageHeader
-        title={`Report ${reportQuery.data.id.slice(0, 8)}`}
+        eyebrow="Forensic Report"
+        title={`Case ${reportQuery.data.id.slice(0, 8)}`}
         description={new Date(reportQuery.data.created_at).toLocaleString()}
         action={
           <a href={api.reportExportUrl(reportQuery.data.id)} target="_blank" rel="noreferrer">
@@ -47,35 +49,27 @@ export default function ReportDetailPage() {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Prediction summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {predictionQuery.isLoading && <LoadingState />}
-            {predictionQuery.data && (
-              <ConfidenceGauge
-                label={predictionQuery.data.label}
-                confidence={predictionQuery.data.confidence}
-                fakeProbability={predictionQuery.data.fake_probability}
-              />
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>PDF preview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <iframe
-              src={api.reportExportUrl(reportQuery.data.id)}
-              className="h-96 w-full rounded-lg border border-border"
-              title="Forensic report PDF"
+      <div className="grid gap-8 md:grid-cols-[1fr_1.4fr]">
+        <div>
+          <div className="meta-label mb-3 text-[10px]">Prediction Summary</div>
+          {predictionQuery.isLoading && <LoadingState />}
+          {predictionQuery.data && (
+            <ConfidenceGauge
+              label={predictionQuery.data.label}
+              confidence={predictionQuery.data.confidence}
+              fakeProbability={predictionQuery.data.fake_probability}
             />
-          </CardContent>
-        </Card>
+          )}
+        </div>
+
+        <div>
+          <div className="meta-label mb-3 text-[10px]">PDF Preview</div>
+          <iframe
+            src={api.reportExportUrl(reportQuery.data.id)}
+            className="h-[420px] w-full rounded-lg border border-border"
+            title="Forensic report PDF"
+          />
+        </div>
       </div>
     </div>
   );

@@ -1,42 +1,52 @@
 @import "tailwindcss";
 
-/* Modern, vibrant dark UI — a violet→cyan gradient accent with soft glow,
-   subtle glass cards, and a glowing radial backdrop, instead of a flat
-   single-hue theme. Dark is the primary, designed-for theme. */
+/* AegisTrace — digital forensics / research-lab identity.
+   Light, soft-neutral surface by default (a "case file" feel: white
+   panels, charcoal text, restrained navy accent), with a true charcoal
+   (not black+glow) dark theme as the secondary, system-driven mode. */
 
 :root {
-  --background: #f5f6fb;
-  --foreground: #14151f;
+  --background: #f5f6f8;
+  --foreground: #1a1d22;
+  --foreground-secondary: #52565f;
   --card: #ffffff;
-  --card-foreground: #14151f;
-  --border: #e2e4f0;
-  --muted: #eef0f8;
-  --muted-foreground: #676b85;
-  --primary: #7c5cff;
-  --primary-2: #22d3ee;
+  --card-foreground: #1a1d22;
+  --border: #e2e4ea;
+  --border-strong: #c9cdd6;
+  --muted: #edeef2;
+  --muted-foreground: #62666f;
+  --primary: #1f3a5f;
+  --primary-hover: #16304f;
   --primary-foreground: #ffffff;
-  --danger: #f43f5e;
-  --danger-foreground: #ffffff;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --ring: #7c5cff;
+  --primary-tint: #e8edf3;
+  --danger: #b6412c;
+  --danger-tint: #fbeae6;
+  --success: #1f7a4d;
+  --success-tint: #e6f3ec;
+  --warning: #ad7208;
+  --warning-tint: #faf1de;
+  --ring: #1f3a5f;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-foreground-secondary: var(--foreground-secondary);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-primary: var(--primary);
-  --color-primary-2: var(--primary-2);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-tint: var(--primary-tint);
   --color-danger: var(--danger);
-  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-tint: var(--danger-tint);
   --color-success: var(--success);
+  --color-success-tint: var(--success-tint);
   --color-warning: var(--warning);
+  --color-warning-tint: var(--warning-tint);
   --color-ring: var(--ring);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -45,71 +55,71 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #08090f;
-    --foreground: #edeef8;
-    --card: #12131c;
-    --card-foreground: #edeef8;
-    --border: #23253355;
-    --muted: #191a26;
-    --muted-foreground: #9195b0;
-    --primary: #8b7bff;
-    --primary-2: #37e0e0;
-    --primary-foreground: #0a0a12;
-    --danger: #fb5a78;
-    --danger-foreground: #1a0a10;
-    --success: #34d399;
-    --warning: #fbb040;
-    --ring: #8b7bff;
+    --background: #14171b;
+    --foreground: #e9eaee;
+    --foreground-secondary: #b0b4bd;
+    --card: #1a1e23;
+    --card-foreground: #e9eaee;
+    --border: #2a2e35;
+    --border-strong: #3a3f48;
+    --muted: #20242a;
+    --muted-foreground: #9aa0aa;
+    --primary: #6f97c4;
+    --primary-hover: #83a7d0;
+    --primary-foreground: #0e1116;
+    --primary-tint: #1f2c3a;
+    --danger: #e0806f;
+    --danger-tint: #2c1c1a;
+    --success: #5cbf8c;
+    --success-tint: #17251e;
+    --warning: #dba75a;
+    --warning-tint: #2b2317;
+    --ring: #6f97c4;
   }
 }
 
 body {
-  background:
-    radial-gradient(1100px 560px at 12% -8%, color-mix(in srgb, var(--primary) 20%, transparent), transparent 60%),
-    radial-gradient(900px 500px at 100% 0%, color-mix(in srgb, var(--primary-2) 14%, transparent), transparent 55%),
-    var(--background);
-  background-attachment: fixed;
+  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
 h1, h2, h3 {
   font-family: var(--font-display), var(--font-sans), sans-serif;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.012em;
+  color: var(--foreground);
 }
 
-.gradient-text {
-  background: linear-gradient(90deg, var(--primary), var(--primary-2));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.label-mono {
+/* Small technical/section labels only — not applied to prose or ordinary
+   UI copy, per the "don't make every piece of text bright/shouting"
+   direction. */
+.meta-label {
   font-family: var(--font-mono), monospace;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
+  color: var(--muted-foreground);
 }
 
-.glow-ring {
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 30%, transparent), 0 8px 30px -12px color-mix(in srgb, var(--primary) 55%, transparent);
+.mono-value {
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
 }
 
 .input {
   width: 100%;
-  border-radius: 0.625rem;
-  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  border: 1px solid var(--border-strong);
   background: var(--card);
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
   color: var(--foreground);
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.12s, box-shadow 0.12s;
 }
 
 .input:focus-visible {
   border-color: var(--ring);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 20%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 15%, transparent);
 }
 
 * {
@@ -117,7 +127,7 @@ h1, h2, h3 {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--primary) 35%, transparent);
+  background: color-mix(in srgb, var(--primary) 25%, transparent);
 }
 
 ::-webkit-scrollbar {
@@ -125,7 +135,7 @@ h1, h2, h3 {
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--muted-foreground) 30%, transparent);
+  background: color-mix(in srgb, var(--muted-foreground) 35%, transparent);
   border-radius: 999px;
 }
 ::-webkit-scrollbar-track {

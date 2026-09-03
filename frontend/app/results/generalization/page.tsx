@@ -4,8 +4,7 @@ import { ComparisonTable, type ComparisonColumn } from "@/components/ComparisonT
 import { PageHeader } from "@/components/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "@/components/QueryState";
 import { ResultsLookupForm } from "@/components/ResultsLookupForm";
-import { Badge } from "@/components/ui/Badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Section } from "@/components/ui/Section";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { api } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
@@ -32,8 +31,9 @@ export default function GeneralizationPage() {
   return (
     <div>
       <PageHeader
-        title="Generalization"
-        description="Unseen-manipulation (leave-one-manipulation-out) and cross-dataset evaluation — the results that most directly test generalization."
+        eyebrow="Generalization"
+        title="Known vs. Unseen Manipulation"
+        description="Unseen-manipulation (leave-one-manipulation-out) and cross-dataset evaluation — the results that most directly test generalization to patterns the model never saw during training."
       />
       <Tabs defaultValue="unseen">
         <TabsList>
@@ -69,26 +69,60 @@ function UnseenManipulationTab() {
         nSamples: result.skipped ? null : result.n_eval_samples,
       }))
     : [];
+  const evaluated = rows.filter((r) => r.accuracy != null);
 
   return (
-    <div>
+    <div className="pt-5">
       <ResultsLookupForm
         label="Results directory (relative to artifacts/)"
         placeholder="experiments/unseen_manipulation/2026-01-01T00-00-00"
         onSubmit={setResultsDir}
       />
       {query.isLoading && <LoadingState />}
-      {query.isError && <ErrorState error={query.error} />}
-      {query.isSuccess && rows.length === 0 && <EmptyState label="No manipulation types found in this results file." />}
+      {query.isError && (
+        <ErrorState
+          error={query.error}
+          title="Unable to load unseen-manipulation results"
+          onRetry={() => query.refetch()}
+        />
+      )}
+      {query.isSuccess && rows.length === 0 && (
+        <EmptyState
+          title="No manipulation types found"
+          description="Run ml.evaluation.experiments.unseen_manipulation, then load its results directory here."
+        />
+      )}
       {rows.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Held-out-manipulation accuracy</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div>
+          {evaluated.length > 0 && (
+            <Section
+              title="Accuracy when each type is held out entirely"
+              description="Each bar: accuracy on a manipulation type the model never saw during training. Skipped types had no held-out evaluation samples at this manifest's scale."
+            >
+              <div className="space-y-3">
+                {evaluated.map((row) => (
+                  <div key={row.id} className="flex items-center gap-3">
+                    <span className="w-32 shrink-0 truncate text-[12.5px] text-foreground-secondary">
+                      {row.manipulationType}
+                    </span>
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary"
+                        style={{ width: `${Math.min(100, (row.accuracy ?? 0) * 100)}%` }}
+                      />
+                    </div>
+                    <span className="mono-value w-14 shrink-0 text-right text-[12.5px]">
+                      {((row.accuracy ?? 0) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          )}
+          <Section title="Full results">
             <ComparisonTable rows={rows} columns={UNSEEN_COLUMNS} defaultSortKey="manipulationType" />
-          </CardContent>
-        </Card>
+          </Section>
+        </div>
       )}
     </div>
   );
@@ -102,50 +136,52 @@ function CrossDatasetTab() {
     enabled: !!resultsDir,
   });
 
+  const inDist = query.data?.in_distribution_metrics?.accuracy;
+  const cross = query.data?.cross_dataset_metrics?.accuracy;
+  const gap = query.data?.generalization_gap_accuracy;
+
   return (
-    <div>
+    <div className="pt-5">
       <ResultsLookupForm
         label="Results directory (relative to artifacts/)"
         placeholder="experiments/cross_dataset/2026-01-01T00-00-00"
         onSubmit={setResultsDir}
       />
       {query.isLoading && <LoadingState />}
-      {query.isError && <ErrorState error={query.error} />}
+      {query.isError && (
+        <ErrorState error={query.error} title="Unable to load cross-dataset results" onRetry={() => query.refetch()} />
+      )}
       {query.data && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {query.data.train_dataset} → {query.data.eval_dataset}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-              <Stat
-                label="In-distribution accuracy"
-                value={query.data.in_distribution_metrics?.accuracy}
-              />
-              <Stat label="Cross-dataset accuracy" value={query.data.cross_dataset_metrics?.accuracy} />
-              <Stat label="Generalization gap" value={query.data.generalization_gap_accuracy} highlight />
+        <Section title={`${query.data.train_dataset} → ${query.data.eval_dataset}`}>
+          <div className="space-y-4">
+            <BarRow label="Known dataset (in-distribution)" value={inDist} />
+            <BarRow label="Unseen dataset (cross-dataset)" value={cross} />
+          </div>
+          {gap != null && (
+            <div className="mt-5 flex items-center gap-2 border-t border-border pt-4 text-[13px]">
+              <span className="text-muted-foreground">Generalization gap</span>
+              <span className={`mono-value font-medium ${gap > 0.1 ? "text-warning" : "text-success"}`}>
+                {(gap * 100).toFixed(1)} pts
+              </span>
+              <span className="text-muted-foreground">{gap > 0.1 ? "— a notable drop" : "— a small drop"}</span>
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </Section>
       )}
     </div>
   );
 }
 
-function Stat({ label, value, highlight }: { label: string; value: number | null | undefined; highlight?: boolean }) {
+function BarRow({ label, value }: { label: string; value: number | null | undefined }) {
   return (
-    <div className="rounded-lg bg-muted p-3">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={`mt-1 text-lg font-semibold ${highlight ? "text-primary" : ""}`}>
-        {value == null ? "—" : value.toFixed(3)}
+    <div className="flex items-center gap-3">
+      <span className="w-56 shrink-0 text-[12.5px] text-foreground-secondary">{label}</span>
+      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
+        <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, (value ?? 0) * 100)}%` }} />
       </div>
-      {highlight && value != null && (
-        <Badge variant={value > 0.1 ? "warning" : "success"} className="mt-1">
-          {value > 0.1 ? "notable drop" : "small drop"}
-        </Badge>
-      )}
+      <span className="mono-value w-14 shrink-0 text-right text-[12.5px]">
+        {value == null ? "—" : `${(value * 100).toFixed(1)}%`}
+      </span>
     </div>
   );
 }

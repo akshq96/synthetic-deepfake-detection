@@ -7,17 +7,18 @@ test.describe("navigation", () => {
   test("dashboard loads and sidebar links to every route", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
-    // Scoped to the sidebar <nav> — "Synthetic Data Lab" also appears in a
-    // dashboard quick-link card, which would otherwise make this ambiguous.
+    // Scoped to the sidebar <nav> — "Synthetic Data Lab" also appears
+    // elsewhere on the dashboard, which would otherwise make this ambiguous.
     const sidebarNav = page.getByRole("navigation");
     await expect(sidebarNav.getByRole("link", { name: "Image / Video Detection" })).toBeVisible();
     await expect(sidebarNav.getByRole("link", { name: "Synthetic Data Lab", exact: true })).toBeVisible();
   });
 
-  test("detect page renders the upload widget", async ({ page }) => {
+  test("detect page renders the upload workspace", async ({ page }) => {
     await page.goto("/detect");
     await expect(page.getByRole("heading", { name: "Detection" })).toBeVisible();
-    await expect(page.getByText("Upload an image (JPG, PNG, WEBP)")).toBeVisible();
+    await expect(page.getByText("Upload an image", { exact: true })).toBeVisible();
+    await expect(page.getByText("What happens next")).toBeVisible();
   });
 });
 
@@ -45,13 +46,12 @@ test.describe("detect happy path (requires a running, configured backend)", () =
     const fileInput = page.locator('input[type="file"]');
     await fileInput.setInputFiles(TEST_IMAGE);
 
-    // Prediction card appears with a real/fake/abstain badge. Scoped to the
-    // Badge component's shared `label-mono` class — the gauge's axis label
-    // also renders the literal text "Real", so a plain text query is
-    // ambiguous.
-    await expect(page.getByRole("heading", { name: "Prediction" })).toBeVisible({ timeout: 20_000 });
-    const badge = page.locator(".label-mono").filter({ hasText: /^(Real|Fake|Uncertain \/ Abstained)$/ }).first();
-    await expect(badge).toBeVisible();
+    // The verdict chip (Real / Deepfake / Uncertain), identified via its
+    // `data-slot="verdict"` attribute — the same word also appears as a
+    // probability-row label, so a plain text query would be ambiguous.
+    const verdict = page.locator('[data-slot="verdict"]');
+    await expect(verdict).toBeVisible({ timeout: 20_000 });
+    await expect(verdict).toHaveText(/^(Real|Deepfake|Uncertain)$/);
     await expect(page.getByText(/% confidence/)).toBeVisible();
 
     // Explainability heatmap image loaded (not the "No heatmap available" fallback).

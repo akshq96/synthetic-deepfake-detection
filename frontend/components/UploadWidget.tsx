@@ -9,11 +9,13 @@ export function UploadWidget({
   onFileSelected,
   disabled,
   label,
+  hint,
 }: {
   accept: string;
   onFileSelected: (file: File) => void;
   disabled?: boolean;
   label: string;
+  hint?: string;
 }) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -43,20 +45,19 @@ export function UploadWidget({
       }}
       onClick={() => !disabled && inputRef.current?.click()}
       className={cn(
-        "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-10 text-center transition-all",
-        isDragOver
-          ? "border-primary bg-gradient-to-br from-primary/10 to-primary-2/5 shadow-[0_0_0_4px_color-mix(in_srgb,var(--primary)_12%,transparent)]"
-          : "border-border hover:border-primary/40 hover:bg-muted/40",
+        "flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed p-8 text-center transition-colors",
+        isDragOver ? "border-primary bg-primary-tint" : "border-border-strong hover:bg-muted/60",
         disabled && "cursor-not-allowed opacity-60"
       )}
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary/15 to-primary-2/10">
-        <UploadCloud className="h-5 w-5 text-primary" strokeWidth={1.75} />
-      </div>
-      <div className="mt-1 text-sm font-medium">{label}</div>
-      <div className="text-xs text-muted-foreground">Drag & drop, or click to browse</div>
+      <UploadCloud className="mb-1.5 h-6 w-6 text-muted-foreground" strokeWidth={1.5} />
+      <div className="text-[13.5px] font-medium">{label}</div>
+      <div className="text-[12px] text-muted-foreground">Drag and drop, or click to browse</div>
+      {hint && <div className="mt-2 text-[11px] text-muted-foreground/80">{hint}</div>}
       {selectedFile && (
-        <div className="label-mono mt-2 rounded-full bg-muted px-3 py-1 text-[10px]">{selectedFile.name}</div>
+        <div className="mono-value mt-3 rounded border border-border bg-card px-2.5 py-1 text-[11px]">
+          {selectedFile.name}
+        </div>
       )}
       <input
         ref={inputRef}

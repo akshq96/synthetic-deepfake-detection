@@ -13,9 +13,9 @@ import {
   YAxis,
 } from "recharts";
 
-// A small fixed palette tied to the app's violet/cyan identity — kept
-// consistent across every chart in the app.
-const SERIES_COLORS = ["#8b7bff", "#37e0e0", "#fb5a78", "#34d399", "#fbb040", "#ec4899"];
+// A restrained, research-figure palette (not neon) — kept consistent
+// across every chart in the app; first slot matches the brand accent.
+const SERIES_COLORS = ["#1f3a5f", "#b6412c", "#1f7a4d", "#ad7208", "#6b5b95", "#4a7a8c"];
 
 export function LineMetricChart({
   data,

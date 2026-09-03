@@ -1,11 +1,18 @@
-import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/cn";
 import type { PredictionLabel } from "@/lib/types";
 
-const LABEL_META: Record<PredictionLabel, { text: string; variant: "success" | "danger" | "warning"; bar: string }> = {
-  real: { text: "Real", variant: "success", bar: "bg-success" },
-  fake: { text: "Fake", variant: "danger", bar: "bg-danger" },
-  abstain: { text: "Uncertain / Abstained", variant: "warning", bar: "bg-warning" },
+const LABEL_META: Record<
+  PredictionLabel,
+  { text: string; color: string; bar: string; tint: string }
+> = {
+  real: { text: "Real", color: "text-success", bar: "bg-success", tint: "bg-success-tint" },
+  fake: { text: "Deepfake", color: "text-danger", bar: "bg-danger", tint: "bg-danger-tint" },
+  abstain: {
+    text: "Uncertain",
+    color: "text-warning",
+    bar: "bg-warning",
+    tint: "bg-warning-tint",
+  },
 };
 
 export function ConfidenceGauge({
@@ -18,28 +25,45 @@ export function ConfidenceGauge({
   fakeProbability: number;
 }) {
   const meta = LABEL_META[label];
+  const realPct = (1 - fakeProbability) * 100;
+  const fakePct = fakeProbability * 100;
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <Badge variant={meta.variant}>{meta.text}</Badge>
-        <span className="text-sm text-muted-foreground">
-          {(confidence * 100).toFixed(1)}% confidence
+    <div>
+      <div className={cn("inline-flex items-center gap-2 rounded px-2.5 py-1", meta.tint)}>
+        <span className={cn("h-2 w-2 rounded-full", meta.bar)} />
+        <span
+          data-slot="verdict"
+          className={cn("font-display text-[13px] font-semibold uppercase tracking-wide", meta.color)}
+        >
+          {meta.text}
         </span>
       </div>
-
-      <div>
-        <div className="mb-1 flex justify-between text-[11px] text-muted-foreground">
-          <span>Real</span>
-          <span>Fake probability: {(fakeProbability * 100).toFixed(1)}%</span>
-        </div>
-        <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
-          <div
-            className={cn("h-full rounded-full transition-all", meta.bar)}
-            style={{ width: `${Math.min(100, Math.max(0, fakeProbability * 100))}%` }}
-          />
-        </div>
+      <div className="mono-value mt-2 text-[13px] text-muted-foreground">
+        {(confidence * 100).toFixed(1)}% confidence
       </div>
+
+      <div className="mt-5 space-y-2.5">
+        <ProbabilityRow label="Real" pct={realPct} barClass="bg-success" />
+        <ProbabilityRow label="Deepfake" pct={fakePct} barClass="bg-danger" />
+      </div>
+    </div>
+  );
+}
+
+function ProbabilityRow({ label, pct, barClass }: { label: string; pct: number; barClass: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="w-16 shrink-0 text-[12px] text-foreground-secondary">{label}</span>
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+        <div
+          className={cn("h-full rounded-full transition-all", barClass)}
+          style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}
+        />
+      </div>
+      <span className="mono-value w-12 shrink-0 text-right text-[12px] text-foreground">
+        {pct.toFixed(1)}%
+      </span>
     </div>
   );
 }

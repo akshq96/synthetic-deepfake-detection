@@ -1,13 +1,21 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import { PageHeader } from "@/components/PageHeader";
+import { Section } from "@/components/ui/Section";
 import { EmptyState, ErrorState, LoadingState } from "@/components/QueryState";
 import { ExperimentStatusBadge } from "@/components/ExperimentStatusBadge";
+import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/Table";
 import { api } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { ArrowUpRight, ScanSearch, Sparkles } from "lucide-react";
+import { ArrowRight, FlaskConical, ScanSearch, Sparkles, ShieldCheck, Microscope } from "lucide-react";
+
+const WORKFLOW_STEPS = [
+  { icon: ScanSearch, label: "Analyze media", description: "Upload an image or video" },
+  { icon: ShieldCheck, label: "Get a verdict", description: "Calibrated real / deepfake confidence" },
+  { icon: Microscope, label: "Understand evidence", description: "Grad-CAM / attention heatmap" },
+  { icon: FlaskConical, label: "Review research", description: "Does augmentation generalize better?" },
+];
 
 export default function DashboardPage() {
   const experimentsQuery = useQuery({
@@ -26,100 +34,106 @@ export default function DashboardPage() {
       <PageHeader
         eyebrow="Overview"
         title="Dashboard"
-        description="Synthetic Data-Augmented Deepfake Detection — a research system for whether training on real + synthetically-manipulated data improves generalization to manipulation patterns never seen during training."
+        description="A research system testing whether training on real footage plus controlled synthetic manipulations improves deepfake detection and its ability to generalize to manipulation patterns never seen during training."
+        action={
+          <Link href="/detect">
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-primary bg-primary px-4 py-2 text-[13px] font-medium text-primary-foreground hover:bg-primary-hover">
+              Analyze media
+              <ArrowRight className="h-3.5 w-3.5" />
+            </span>
+          </Link>
+        }
       />
 
-      <Link href="/results/generalization" className="mb-6 block">
-        <div className="glow-ring group relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-card to-primary-2/[0.06] px-6 py-6 transition-transform duration-200 hover:-translate-y-0.5">
-          <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-primary-2/20 blur-3xl" />
-          <div className="label-mono mb-2 text-[10px] text-primary">Primary Research Question</div>
-          <p className="font-display relative max-w-2xl text-[19px] leading-snug font-medium tracking-tight">
+      <Section>
+        <div className="grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
+          {WORKFLOW_STEPS.map((step, i) => (
+            <div key={step.label} className="relative">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border-strong bg-card">
+                  <step.icon className="h-[15px] w-[15px] text-primary" strokeWidth={1.75} />
+                </div>
+                <span className="meta-label text-[10px]">Step {i + 1}</span>
+              </div>
+              <div className="mt-2.5 text-[13.5px] font-medium">{step.label}</div>
+              <div className="mt-0.5 text-[12px] text-muted-foreground">{step.description}</div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Primary research question">
+        <div className="rounded-lg border border-border bg-card px-5 py-5">
+          <p className="font-display max-w-2xl text-[17px] font-medium leading-snug tracking-tight">
             Does synthetic data augmentation improve generalization of deepfake detectors to unseen
             manipulation techniques?
           </p>
-          <div className="relative mt-3 inline-flex items-center gap-1 text-[12px] font-medium text-primary opacity-90 transition-opacity group-hover:opacity-100">
-            View generalization results
-            <ArrowUpRight className="h-3.5 w-3.5" />
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link
+              href="/synthetic-lab"
+              className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-primary hover:underline"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Configure synthetic data
+            </Link>
+            <span className="text-border-strong">·</span>
+            <Link
+              href="/results/generalization"
+              className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-primary hover:underline"
+            >
+              View generalization results
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
         </div>
-      </Link>
+      </Section>
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2">
-        <QuickLinkCard
-          index="01"
-          href="/detect"
-          icon={ScanSearch}
-          title="Run detection"
-          description="Upload an image or video and inspect the model's prediction and heatmap."
-        />
-        <QuickLinkCard
-          index="02"
-          href="/synthetic-lab"
-          icon={Sparkles}
-          title="Synthetic Data Lab"
-          description="Configure a synthetic-augmentation ratio/technique mix and launch a training run."
-        />
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent experiment runs</CardTitle>
-          <CardDescription>The most recently created training/experiment runs.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {experimentsQuery.isLoading && <LoadingState />}
-          {experimentsQuery.isError && <ErrorState error={experimentsQuery.error} />}
-          {experimentsQuery.isSuccess && recentRuns.length === 0 && (
-            <EmptyState label="No experiment runs yet — launch one from the Synthetic Data Lab." />
-          )}
-          {recentRuns.length > 0 && (
-            <ul className="divide-y divide-border">
+      <Section
+        title="Recent experiment runs"
+        description="The most recently created training/experiment runs, launched from the Synthetic Data Lab."
+      >
+        {experimentsQuery.isLoading && <LoadingState />}
+        {experimentsQuery.isError && (
+          <ErrorState error={experimentsQuery.error} onRetry={() => experimentsQuery.refetch()} />
+        )}
+        {experimentsQuery.isSuccess && recentRuns.length === 0 && (
+          <EmptyState
+            title="No experiments recorded"
+            description="Training and evaluation runs will appear here once you launch a research experiment."
+            action={
+              <Link href="/synthetic-lab" className="text-[12.5px] font-medium text-primary hover:underline">
+                Open Synthetic Data Lab →
+              </Link>
+            }
+          />
+        )}
+        {recentRuns.length > 0 && (
+          <Table>
+            <THead>
+              <TR>
+                <TH>Run</TH>
+                <TH>Experiment</TH>
+                <TH>Status</TH>
+                <TH>Created</TH>
+              </TR>
+            </THead>
+            <TBody>
               {recentRuns.map((run) => (
-                <li key={run.id} className="flex items-center justify-between py-3 text-sm">
-                  <div>
-                    <div className="font-medium">{run.run_name}</div>
-                    <div className="text-xs text-muted-foreground">{run.experimentName}</div>
-                  </div>
-                  <ExperimentStatusBadge status={run.status} />
-                </li>
+                <TR key={run.id}>
+                  <TD className="font-medium">{run.run_name}</TD>
+                  <TD className="text-muted-foreground">{run.experimentName}</TD>
+                  <TD>
+                    <ExperimentStatusBadge status={run.status} />
+                  </TD>
+                  <TD className="mono-value text-muted-foreground">
+                    {new Date(run.created_at).toLocaleDateString()}
+                  </TD>
+                </TR>
               ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+            </TBody>
+          </Table>
+        )}
+      </Section>
     </div>
-  );
-}
-
-function QuickLinkCard({
-  index,
-  href,
-  icon: Icon,
-  title,
-  description,
-}: {
-  index: string;
-  href: string;
-  icon: React.ElementType;
-  title: string;
-  description: string;
-}) {
-  return (
-    <Link href={href}>
-      <Card className="h-full transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_12px_30px_-14px_var(--primary)]">
-        <CardContent className="flex items-start gap-3.5 pt-5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary-2/10">
-            <Icon className="h-[17px] w-[17px] text-primary" strokeWidth={1.75} />
-          </div>
-          <div className="flex-1">
-            <div className="mb-1 flex items-center gap-2">
-              <div className="font-display text-[13.5px] font-semibold">{title}</div>
-              <span className="label-mono text-[9px] text-muted-foreground/50">{index}</span>
-            </div>
-            <div className="text-xs leading-relaxed text-muted-foreground">{description}</div>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
   );
 }

@@ -5,10 +5,12 @@ import { PageHeader } from "@/components/PageHeader";
 import { ErrorState } from "@/components/QueryState";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Section } from "@/components/ui/Section";
 import { api } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
 import type { SyntheticLabRunRequest } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { ArrowRight, Database, Layers, Sparkles, Cpu } from "lucide-react";
 import { useState } from "react";
 
 const BASE_CONFIGS = [
@@ -24,6 +26,13 @@ const TECHNIQUES = [
   { value: "compression_artifact", label: "Compression artifact" },
   { value: "color_perturb", label: "Color / illumination mismatch" },
   { value: "autoencoder_swap", label: "Autoencoder reconstruction" },
+];
+
+const FLOW_STEPS = [
+  { icon: Database, label: "Original data", description: "Real + labeled deepfake samples" },
+  { icon: Sparkles, label: "Synthetic transformation", description: "Ratio + technique mix, below" },
+  { icon: Layers, label: "Augmented dataset", description: "Original + synthetic manipulations" },
+  { icon: Cpu, label: "Training", description: "Same model, launched as a run" },
 ];
 
 export default function SyntheticLabPage() {
@@ -65,11 +74,31 @@ export default function SyntheticLabPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Research Workstation"
         title="Synthetic Data Lab"
-        description="Configure a synthetic-augmentation ratio/technique mix and launch a training run — this is the baseline-vs-augmented condition the research question is answered from."
+        description="Configure a synthetic-augmentation mix and launch a training run — this is how the baseline-vs-augmented comparison behind the project's research question gets produced."
       />
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <Section>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-4">
+          {FLOW_STEPS.map((step, i) => (
+            <div key={step.label} className="relative flex items-start gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border-strong bg-card">
+                <step.icon className="h-[15px] w-[15px] text-primary" strokeWidth={1.75} />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[13px] font-medium leading-tight">{step.label}</div>
+                <div className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground">{step.description}</div>
+              </div>
+              {i < FLOW_STEPS.length - 1 && (
+                <ArrowRight className="absolute -right-3 top-2 hidden h-3.5 w-3.5 text-border-strong sm:block" />
+              )}
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <div className="grid gap-4 border-t border-border pt-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Run configuration</CardTitle>
@@ -117,9 +146,9 @@ export default function SyntheticLabPage() {
                       type="button"
                       onClick={() => toggleTechnique(t.value)}
                       className={cn(
-                        "rounded-full border px-3 py-1 text-xs transition-colors",
+                        "rounded border px-2.5 py-1 text-[12px] transition-colors",
                         techniques.includes(t.value)
-                          ? "border-primary bg-primary/10 text-primary"
+                          ? "border-primary bg-primary-tint text-primary"
                           : "border-border text-muted-foreground hover:bg-muted"
                       )}
                     >
@@ -145,7 +174,9 @@ export default function SyntheticLabPage() {
             >
               Launch run
             </Button>
-            {launchMutation.isError && <ErrorState error={launchMutation.error} />}
+            {launchMutation.isError && (
+              <ErrorState error={launchMutation.error} title="Could not launch this run" />
+            )}
           </CardContent>
         </Card>
 
@@ -156,30 +187,32 @@ export default function SyntheticLabPage() {
           </CardHeader>
           <CardContent>
             {!launchedRunId && (
-              <p className="text-sm text-muted-foreground">Launch a run to see its status here.</p>
+              <p className="text-[12.5px] text-muted-foreground">Launch a run to see its status here.</p>
             )}
             {statusQuery.data && (
-              <div className="space-y-3 text-sm">
+              <dl className="mono-value space-y-2 text-[12.5px]">
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Status</span>
-                  <ExperimentStatusBadge status={statusQuery.data.status} />
+                  <dt className="text-muted-foreground">Status</dt>
+                  <dd>
+                    <ExperimentStatusBadge status={statusQuery.data.status} />
+                  </dd>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Run ID</span>
-                  <code className="text-xs">{statusQuery.data.id}</code>
+                <div className="flex items-center justify-between border-t border-border pt-2">
+                  <dt className="text-muted-foreground">Run ID</dt>
+                  <dd className="truncate">{statusQuery.data.id}</dd>
                 </div>
                 {statusQuery.data.mlflow_run_id && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">MLflow run</span>
-                    <code className="text-xs">{statusQuery.data.mlflow_run_id}</code>
+                  <div className="flex items-center justify-between border-t border-border pt-2">
+                    <dt className="text-muted-foreground">MLflow run</dt>
+                    <dd className="truncate">{statusQuery.data.mlflow_run_id}</dd>
                   </div>
                 )}
                 {statusQuery.data.error_message && (
-                  <p className="rounded-md bg-danger/10 p-2 text-xs text-danger">
+                  <p className="rounded border border-danger/30 bg-danger-tint p-2 text-danger">
                     {statusQuery.data.error_message}
                   </p>
                 )}
-              </div>
+              </dl>
             )}
           </CardContent>
         </Card>
@@ -191,7 +224,7 @@ export default function SyntheticLabPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-medium text-muted-foreground">{label}</span>
+      <span className="mb-1.5 block text-[12px] font-medium text-muted-foreground">{label}</span>
       {children}
     </label>
   );

@@ -95,13 +95,18 @@ export interface ModelCompareOut {
 
 // Result-file shapes read back from ml/evaluation/experiments/*.py and
 // ml/evaluation/ablation.py — see backend/app/api/results.py.
+// roc_auc/pr_auc are `null` (not NaN) over the wire: ml.evaluation.metrics
+// reports NaN for a degenerate eval set (only one class present — common at
+// small/fixture scale), and FastAPI's JSON encoder converts NaN to `null`
+// for spec-compliant JSON. Every renderer of these two fields must handle
+// null explicitly rather than assume a number.
 export interface EvalMetrics {
   accuracy: number;
   precision: number;
   recall: number;
   f1: number;
-  roc_auc: number;
-  pr_auc: number;
+  roc_auc: number | null;
+  pr_auc: number | null;
   n_samples: number;
 }
 

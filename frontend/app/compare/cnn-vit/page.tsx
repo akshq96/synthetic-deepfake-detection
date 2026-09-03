@@ -5,7 +5,7 @@ import { BarMetricChart } from "@/components/MetricChart";
 import { PageHeader } from "@/components/PageHeader";
 import { EmptyState, ErrorState, LoadingState } from "@/components/QueryState";
 import { ResultsLookupForm } from "@/components/ResultsLookupForm";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Section } from "@/components/ui/Section";
 import { api } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -53,8 +53,9 @@ export default function CompareCnnVitPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Scientific Comparison"
         title="CNN vs ViT"
-        description="Most recent MLflow run per architecture within an experiment, compared side by side."
+        description="The most recent MLflow run per architecture within an experiment — a CNN backbone (EfficientNetV2 / ConvNeXt) and a Vision Transformer, evaluated identically."
       />
 
       <ResultsLookupForm
@@ -64,39 +65,37 @@ export default function CompareCnnVitPage() {
       />
 
       {query.isLoading && <LoadingState />}
-      {query.isError && <ErrorState error={query.error} />}
+      {query.isError && (
+        <ErrorState
+          error={query.error}
+          title="Unable to load model comparison"
+          onRetry={() => query.refetch()}
+        />
+      )}
       {query.isSuccess && rows.length === 0 && (
-        <EmptyState label="No runs with a model.name param found in this experiment yet." />
+        <EmptyState
+          title="No comparable runs found"
+          description="This experiment has no MLflow runs with a model.name parameter yet — train a CNN and a ViT run under the same experiment name to compare them here."
+        />
       )}
 
       {rows.length > 0 && (
-        <div className="grid gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Validation metrics by architecture</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <BarMetricChart
-                data={rows.map((r) => ({
-                  model: r.model,
-                  Accuracy: r.accuracy,
-                  F1: r.f1,
-                  "ROC-AUC": r.roc_auc,
-                }))}
-                series={["Accuracy", "F1", "ROC-AUC"]}
-                xKey="model"
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Full comparison</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ComparisonTable rows={rows} columns={COLUMNS} defaultSortKey="accuracy" />
-            </CardContent>
-          </Card>
+        <div>
+          <Section title="Validation metrics by architecture">
+            <BarMetricChart
+              data={rows.map((r) => ({
+                model: r.model,
+                Accuracy: r.accuracy,
+                F1: r.f1,
+                "ROC-AUC": r.roc_auc,
+              }))}
+              series={["Accuracy", "F1", "ROC-AUC"]}
+              xKey="model"
+            />
+          </Section>
+          <Section title="Full comparison">
+            <ComparisonTable rows={rows} columns={COLUMNS} defaultSortKey="accuracy" />
+          </Section>
         </div>
       )}
     </div>
