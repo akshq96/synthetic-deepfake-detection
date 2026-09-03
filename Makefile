@@ -25,7 +25,7 @@ test-e2e:
 	cd frontend && npm run test:e2e
 
 backend:
-	$(VENV)/uvicorn backend.app.main:app --reload
+	$(VENV)/uvicorn backend.app.main:app --reload --reload-dir backend --reload-dir ml
 
 frontend:
 	cd frontend && npm run dev
