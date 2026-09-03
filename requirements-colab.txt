@@ -1,0 +1,25 @@
+# For use on Colab/Kaggle notebooks, which preinstall torch/torchvision (and
+# usually a compatible numpy/pandas) already — reinstalling them tends to
+# fight the platform's own pinned CUDA build. Install this instead of the
+# torch/eval extras in pyproject.toml:
+#
+#   !git clone <this repo>
+#   %cd <repo>
+#   !pip install -q -e . --no-deps
+#   !pip install -q -r requirements-colab.txt
+#
+# mediapipe is exact-pinned to 0.10.14 (see pyproject.toml for why — newer
+# releases either drop or crash the face-detector API this project uses).
+mediapipe==0.10.14
+opencv-python-headless>=4.9
+pillow>=10.3
+omegaconf>=2.3
+pyyaml>=6.0
+tqdm>=4.66
+timm>=0.9.16
+grad-cam>=1.5.0
+scikit-learn>=1.4
+scipy>=1.12
+matplotlib>=3.8
+mlflow>=2.12
+albumentations>=1.4

@@ -1,0 +1,27 @@
+# CNN baseline — real-run template (Colab/Kaggle GPU). Requires a real,
+# leakage-checked split manifest built from an actual downloaded dataset (see
+# ml/scripts/download_datasets.py and ml/data_pipeline/). Not runnable as-is
+# until data.manifest_path points at real data.
+experiment_name: cnn_baseline
+run_name: cnn_baseline_ffpp_v1
+artifacts_root: artifacts
+mlflow_tracking_uri: null
+
+model:
+  name: efficientnetv2_s
+  pretrained: true
+  drop_rate: 0.2
+
+data:
+  manifest_path: data/manifests/ffpp_split.parquet
+  image_size: 224
+  synthetic_ratio: 0.0
+  synthetic_techniques: []
+
+training:
+  debug: false
+  epochs: 20
+  batch_size: 32
+  lr: 0.0003
+  seed: 42
+  resume: auto

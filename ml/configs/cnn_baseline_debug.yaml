@@ -1,0 +1,29 @@
+# CNN baseline — CPU debug config. Truncates to a handful of samples per
+# split and runs 1 epoch, so this completes in seconds locally for fast
+# iteration / CI. For a real run, copy this file, set training.debug=false,
+# training.epochs to something real, and point data.manifest_path at a real
+# split manifest (see ml/scripts/download_datasets.py + Phase 1 pipeline).
+experiment_name: cnn_baseline
+run_name: cnn_baseline_debug
+artifacts_root: artifacts
+mlflow_tracking_uri: null  # null -> defaults to sqlite:///<artifacts_root>/mlflow.db (metadata) + file:<artifacts_root>/mlflow/<experiment> (artifacts)
+
+model:
+  name: efficientnetv2_s
+  pretrained: false  # debug: avoid a network fetch of ImageNet weights
+  drop_rate: 0.0
+
+data:
+  manifest_path: data/manifests/fixture_split.parquet
+  image_size: 64
+  synthetic_ratio: 0.0        # Phase 3: fraction of training batch drawn from synthetic data
+  synthetic_techniques: []    # Phase 3: which ml/synthetic/ techniques to draw from
+
+training:
+  debug: true
+  debug_n_samples: 6   # per split, when debug=true
+  epochs: 1
+  batch_size: 4
+  lr: 0.001
+  seed: 42
+  resume: null   # "auto" to resume from artifacts/checkpoints/<run_name>/latest.pt
