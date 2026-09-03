@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend — Deepfake Detection Dashboard
 
-## Getting Started
+Next.js 16 (App Router) + TypeScript + Tailwind v4, client-rendered against
+the FastAPI backend (`../backend/`) via TanStack Query. See the repo root
+`README.md` for the full-stack quickstart and `../docs/api_reference.md` for
+what each page talks to.
 
-First, run the development server:
+## Development
 
 ```bash
+npm install
+cp .env.local.example .env.local   # points NEXT_PUBLIC_API_BASE_URL at the backend
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The backend must be running separately (`uvicorn backend.app.main:app` from
+the repo root) for any page that fetches data to show anything other than
+loading/error states.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Testing
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm test          # vitest — component unit tests
+npm run test:e2e  # Playwright — navigation always runs; the live detect
+                   # happy-path test auto-skips if no backend is reachable
+                   # at NEXT_PUBLIC_API_BASE_URL
+npm run lint       # eslint
+npx tsc --noEmit   # type-check
+npm run build      # production build
+```
 
-## Learn More
+## Structure
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `app/` — one route per required dashboard feature (see repo root README).
+- `components/` — `ui/` (hand-rolled Tailwind primitives: Card, Button,
+  Badge, Table, Tabs, Spinner — no component-library CLI dependency),
+  `layout/` (sidebar nav), and feature components (UploadWidget,
+  HeatmapOverlay, ConfidenceGauge, MetricChart, ComparisonTable,
+  SuspiciousFrameStrip, ExperimentStatusBadge, ResultsLookupForm).
+- `lib/api-client.ts` + `lib/types.ts` — a thin typed fetch wrapper and
+  hand-kept-in-sync TypeScript mirrors of the backend's Pydantic schemas
+  (no codegen — both sides are small and owned in this repo).
