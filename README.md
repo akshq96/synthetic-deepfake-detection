@@ -15,8 +15,10 @@ must trace back to a logged MLflow run.
 
 ## Status
 
-Built incrementally, phase by phase (see `docs/methodology.md` once written). Current
-phase: **1 — dataset pipeline**.
+Built incrementally, phase by phase (see `docs/methodology.md` once written).
+Phases 1–10 (dataset pipeline through the Next.js frontend) are implemented and
+tested; phase 11 (final testing/documentation, and a real Colab/Kaggle GPU run on
+actual data) is next.
 
 ## Repository layout
 
@@ -37,12 +39,35 @@ pip install -e .
 pytest ml/tests
 ```
 
-Training (later phases) is designed to run identically on a CPU debug subset locally
-or on a free Colab/Kaggle GPU via the same script + config, e.g.:
+Training is designed to run identically on a CPU debug subset locally or on a free
+Colab/Kaggle GPU via the same script + config, e.g.:
 
 ```bash
+pip install -e ".[torch,eval,tracking]"
 python -m ml.training.train --config ml/configs/cnn_baseline_debug.yaml
 ```
+
+## Quickstart (backend + frontend)
+
+```bash
+# Backend — FastAPI + SQLAlchemy + Alembic
+pip install -e ".[backend]"
+alembic -c backend/alembic.ini upgrade head
+cp .env.example .env   # then set DEFAULT_CHECKPOINT_PATH etc. once you have a trained model
+uvicorn backend.app.main:app --reload
+
+# Frontend — Next.js + TypeScript + Tailwind, in a second terminal
+cd frontend
+npm install
+cp .env.local.example .env.local
+npm run dev
+```
+
+The frontend expects the backend at `http://localhost:8000` by default (see
+`frontend/.env.local.example`). The `/api/detect/*` endpoints return `503` until
+`DEFAULT_CHECKPOINT_PATH` points at a real trained checkpoint (e.g. from
+`ml.training.train` or the Synthetic Data Lab) — by design, the app never serves
+predictions from an untrained/random model without saying so.
 
 ## License / data notice
 

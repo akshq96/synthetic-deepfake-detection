@@ -18,7 +18,13 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    # Absolute path: env_file=".env" would resolve relative to whatever the
+    # current working directory happens to be when the process starts, which
+    # silently stops finding the file if the app isn't launched from exactly
+    # the repo root (e.g. a systemd unit, a different terminal cwd).
+    model_config = SettingsConfigDict(
+        env_file=str(REPO_ROOT / ".env"), env_file_encoding="utf-8", extra="ignore"
+    )
 
     database_url: str = f"sqlite:///{REPO_ROOT / 'artifacts' / 'app.db'}"
     artifacts_root: Path = REPO_ROOT / "artifacts"

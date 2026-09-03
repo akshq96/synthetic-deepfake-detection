@@ -41,8 +41,10 @@ frontend/coverage/
 # OS
 .DS_Store
 
-# Claude Code local session state
-.claude/
+# Claude Code local session state (launch.json is checked in deliberately —
+# it's reproducible dev-server config, not session state)
+.claude/*
+!.claude/launch.json
 
 # IDE
 .vscode/

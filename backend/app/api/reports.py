@@ -31,6 +31,20 @@ def generate_report(payload: ReportCreateRequest, db: Session = Depends(get_db))
     return ReportOut.model_validate(report)
 
 
+@router.get("", response_model=list[ReportOut])
+def list_reports(db: Session = Depends(get_db)) -> list[ReportOut]:
+    reports = db.query(Report).order_by(Report.created_at.desc()).all()
+    return [ReportOut.model_validate(r) for r in reports]
+
+
+@router.get("/{report_id}", response_model=ReportOut)
+def get_report(report_id: str, db: Session = Depends(get_db)) -> ReportOut:
+    report = db.get(Report, report_id)
+    if report is None:
+        raise HTTPException(status_code=404, detail=f"report {report_id!r} not found")
+    return ReportOut.model_validate(report)
+
+
 @router.get("/{report_id}/export")
 def export_report(report_id: str, db: Session = Depends(get_db)) -> FileResponse:
     report = db.get(Report, report_id)

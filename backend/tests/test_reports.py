@@ -30,6 +30,32 @@ def test_generate_and_export_report(client: TestClient):
     assert export_response.content.startswith(b"%PDF")
 
 
+def test_list_reports(client: TestClient):
+    files = {"file": ("test.jpg", io.BytesIO(_tiny_jpeg_bytes()), "image/jpeg")}
+    prediction = client.post("/api/detect/image", files=files).json()
+    generated = client.post("/api/reports/generate", json={"prediction_id": prediction["id"]}).json()
+
+    response = client.get("/api/reports")
+    assert response.status_code == 200
+    reports = response.json()
+    assert any(r["id"] == generated["id"] for r in reports)
+
+
+def test_get_report(client: TestClient):
+    files = {"file": ("test.jpg", io.BytesIO(_tiny_jpeg_bytes()), "image/jpeg")}
+    prediction = client.post("/api/detect/image", files=files).json()
+    generated = client.post("/api/reports/generate", json={"prediction_id": prediction["id"]}).json()
+
+    response = client.get(f"/api/reports/{generated['id']}")
+    assert response.status_code == 200
+    assert response.json()["prediction_id"] == prediction["id"]
+
+
+def test_get_report_unknown_id_404(client: TestClient):
+    response = client.get("/api/reports/does-not-exist")
+    assert response.status_code == 404
+
+
 def test_generate_report_unknown_prediction_404(client: TestClient):
     response = client.post("/api/reports/generate", json={"prediction_id": "does-not-exist"})
     assert response.status_code == 404
