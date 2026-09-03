@@ -92,3 +92,22 @@ def generate_fixture_dataset(
 
 def total_fixture_samples() -> int:
     return 2 * N_IDENTITIES_PER_LABEL * N_VIDEOS_PER_IDENTITY * N_FRAMES_PER_VIDEO
+
+
+def generate_fixture_video(path: Path, *, n_frames: int = 20, size: int = 64, fps: float = 10.0) -> Path:
+    """Writes a tiny synthetic (non-face) video for exercising ml/video/ —
+    face detection on it must use a MockFaceDetector (see
+    ml.data_pipeline.face_detector), same reasoning as the image fixtures.
+    """
+    import cv2
+
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+    writer = cv2.VideoWriter(str(path), fourcc, fps, (size, size))
+    if not writer.isOpened():
+        raise RuntimeError(f"OpenCV could not open a VideoWriter for {path}")
+    for i in range(n_frames):
+        writer.write(_make_image(seed=i))
+    writer.release()
+    return path
