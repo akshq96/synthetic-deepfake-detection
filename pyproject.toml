@@ -57,6 +57,7 @@ backend = [
     "python-multipart>=0.0.9",
     "aiofiles>=23.2",
     "psutil>=5.9",
+    "reportlab>=4.1",
 ]
 dev = [
     "pytest>=8.1",
@@ -72,7 +73,7 @@ full = [
 packages = ["ml"]
 
 [tool.pytest.ini_options]
-testpaths = ["ml/tests"]
+testpaths = ["ml/tests", "backend/tests"]
 pythonpath = ["."]
 
 [tool.ruff]
