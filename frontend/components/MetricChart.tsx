@@ -13,9 +13,9 @@ import {
   YAxis,
 } from "recharts";
 
-// A small fixed palette (not the muted/border tokens, which are too low-
-// contrast for data series) — kept consistent across every chart in the app.
-const SERIES_COLORS = ["#4f46e5", "#dc2626", "#16a34a", "#d97706", "#0891b2", "#9333ea"];
+// A small fixed palette tied to the app's gold/forensic identity rather
+// than a generic rainbow — kept consistent across every chart in the app.
+const SERIES_COLORS = ["#d6a13f", "#5cb583", "#e2645f", "#7c98b3", "#a487c2", "#c98b52"];
 
 export function LineMetricChart({
   data,

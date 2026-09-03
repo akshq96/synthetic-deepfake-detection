@@ -4,7 +4,7 @@ export function Card({ className, children }: { className?: string; children: Re
   return (
     <div
       className={cn(
-        "rounded-xl border border-border bg-card text-card-foreground shadow-sm",
+        "rounded-md border border-border bg-card text-card-foreground",
         className
       )}
     >
@@ -18,7 +18,11 @@ export function CardHeader({ className, children }: { className?: string; childr
 }
 
 export function CardTitle({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <h3 className={cn("text-sm font-semibold tracking-tight", className)}>{children}</h3>;
+  return (
+    <h3 className={cn("font-display text-[13.5px] font-semibold tracking-tight", className)}>
+      {children}
+    </h3>
+  );
 }
 
 export function CardDescription({ className, children }: { className?: string; children: React.ReactNode }) {

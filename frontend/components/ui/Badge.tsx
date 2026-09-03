@@ -3,11 +3,11 @@ import { cn } from "@/lib/cn";
 type BadgeVariant = "default" | "success" | "danger" | "warning" | "muted";
 
 const VARIANT_CLASSES: Record<BadgeVariant, string> = {
-  default: "bg-primary/10 text-primary",
-  success: "bg-success/10 text-success",
-  danger: "bg-danger/10 text-danger",
-  warning: "bg-warning/10 text-warning",
-  muted: "bg-muted text-muted-foreground",
+  default: "border-primary/30 bg-primary/[0.08] text-primary",
+  success: "border-success/30 bg-success/[0.08] text-success",
+  danger: "border-danger/30 bg-danger/[0.08] text-danger",
+  warning: "border-warning/30 bg-warning/[0.08] text-warning",
+  muted: "border-border bg-muted text-muted-foreground",
 };
 
 export function Badge({
@@ -22,7 +22,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
+        "label-mono inline-flex items-center gap-1.5 rounded-sm border px-2 py-0.5 text-[10px] font-medium",
         VARIANT_CLASSES[variant],
         className
       )}

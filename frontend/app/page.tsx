@@ -7,7 +7,7 @@ import { ExperimentStatusBadge } from "@/components/ExperimentStatusBadge";
 import { api } from "@/lib/api-client";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { FlaskConical, ScanSearch, Sparkles } from "lucide-react";
+import { ArrowUpRight, ScanSearch, Sparkles } from "lucide-react";
 
 export default function DashboardPage() {
   const experimentsQuery = useQuery({
@@ -24,28 +24,39 @@ export default function DashboardPage() {
   return (
     <div>
       <PageHeader
+        eyebrow="Overview"
         title="Dashboard"
-        description="Synthetic Data-Augmented Deepfake Detection — research overview"
+        description="Synthetic Data-Augmented Deepfake Detection — a research system for whether training on real + synthetically-manipulated data improves generalization to manipulation patterns never seen during training."
       />
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+      <Link href="/results/generalization" className="mb-6 block">
+        <div className="group relative overflow-hidden rounded-md border border-primary/25 bg-primary/[0.04] px-6 py-5 transition-colors hover:border-primary/50">
+          <div className="label-mono mb-2 text-[10px] text-primary">Primary Research Question</div>
+          <p className="font-display max-w-2xl text-[17px] leading-snug font-medium tracking-tight">
+            Does synthetic data augmentation improve generalization of deepfake detectors to unseen
+            manipulation techniques?
+          </p>
+          <div className="mt-3 inline-flex items-center gap-1 text-[12px] text-primary opacity-80 transition-opacity group-hover:opacity-100">
+            View generalization results
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </div>
+        </div>
+      </Link>
+
+      <div className="mb-6 grid gap-4 sm:grid-cols-2">
         <QuickLinkCard
+          index="01"
           href="/detect"
           icon={ScanSearch}
           title="Run detection"
           description="Upload an image or video and inspect the model's prediction and heatmap."
         />
         <QuickLinkCard
+          index="02"
           href="/synthetic-lab"
           icon={Sparkles}
           title="Synthetic Data Lab"
           description="Configure a synthetic-augmentation ratio/technique mix and launch a training run."
-        />
-        <QuickLinkCard
-          href="/results/generalization"
-          icon={FlaskConical}
-          title="Research question"
-          description="Does synthetic augmentation improve generalization to unseen manipulations?"
         />
       </div>
 
@@ -80,11 +91,13 @@ export default function DashboardPage() {
 }
 
 function QuickLinkCard({
+  index,
   href,
   icon: Icon,
   title,
   description,
 }: {
+  index: string;
   href: string;
   icon: React.ElementType;
   title: string;
@@ -92,11 +105,14 @@ function QuickLinkCard({
 }) {
   return (
     <Link href={href}>
-      <Card className="h-full transition-colors hover:border-primary/50">
-        <CardContent className="pt-5">
-          <Icon className="mb-3 h-5 w-5 text-primary" />
-          <div className="mb-1 text-sm font-semibold">{title}</div>
-          <div className="text-xs text-muted-foreground">{description}</div>
+      <Card className="h-full transition-colors hover:border-primary/40">
+        <CardContent className="flex items-start gap-3.5 pt-5">
+          <span className="label-mono mt-0.5 text-[10px] text-muted-foreground/60">{index}</span>
+          <div className="flex-1">
+            <Icon className="mb-2.5 h-[18px] w-[18px] text-primary" strokeWidth={1.75} />
+            <div className="font-display mb-1 text-[13.5px] font-semibold">{title}</div>
+            <div className="text-xs leading-relaxed text-muted-foreground">{description}</div>
+          </div>
         </CardContent>
       </Card>
     </Link>

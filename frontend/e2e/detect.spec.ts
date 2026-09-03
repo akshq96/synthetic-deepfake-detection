@@ -46,11 +46,12 @@ test.describe("detect happy path (requires a running, configured backend)", () =
     await fileInput.setInputFiles(TEST_IMAGE);
 
     // Prediction card appears with a real/fake/abstain badge. Scoped to the
-    // Badge component's variant classes — the gauge's axis label also
-    // renders the literal text "Real", so a plain text query is ambiguous.
+    // Badge component's shared `label-mono` class — the gauge's axis label
+    // also renders the literal text "Real", so a plain text query is
+    // ambiguous.
     await expect(page.getByRole("heading", { name: "Prediction" })).toBeVisible({ timeout: 20_000 });
-    const badge = page.locator(".bg-success\\/10, .bg-danger\\/10, .bg-warning\\/10").first();
-    await expect(badge).toHaveText(/^(Real|Fake|Uncertain \/ Abstained)$/);
+    const badge = page.locator(".label-mono").filter({ hasText: /^(Real|Fake|Uncertain \/ Abstained)$/ }).first();
+    await expect(badge).toBeVisible();
     await expect(page.getByText(/% confidence/)).toBeVisible();
 
     // Explainability heatmap image loaded (not the "No heatmap available" fallback).

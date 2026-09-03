@@ -12,11 +12,10 @@ describe("ConfidenceGauge", () => {
 
   it("renders the Real badge for a real prediction", () => {
     render(<ConfidenceGauge label="real" confidence={0.87} fakeProbability={0.13} />);
-    // "Real" appears twice: the status badge and the gauge's axis label —
-    // assert the badge specifically via its distinguishing class rather
-    // than an ambiguous text match.
-    const badge = document.querySelector(".bg-success\\/10");
-    expect(badge).toHaveTextContent("Real");
+    // "Real" appears twice: the Badge (labeled via Badge's shared
+    // `label-mono` class) and the gauge's plain, unstyled axis-label span.
+    const [badge] = screen.getAllByText("Real").filter((el) => el.className.includes("label-mono"));
+    expect(badge).toBeInTheDocument();
     expect(screen.getByText("87.0% confidence")).toBeInTheDocument();
   });
 
