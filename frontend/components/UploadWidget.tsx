@@ -43,16 +43,20 @@ export function UploadWidget({
       }}
       onClick={() => !disabled && inputRef.current?.click()}
       className={cn(
-        "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-10 text-center transition-colors",
-        isDragOver ? "border-primary bg-primary/5" : "border-border",
+        "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-10 text-center transition-all",
+        isDragOver
+          ? "border-primary bg-gradient-to-br from-primary/10 to-primary-2/5 shadow-[0_0_0_4px_color-mix(in_srgb,var(--primary)_12%,transparent)]"
+          : "border-border hover:border-primary/40 hover:bg-muted/40",
         disabled && "cursor-not-allowed opacity-60"
       )}
     >
-      <UploadCloud className="h-8 w-8 text-muted-foreground" />
-      <div className="text-sm font-medium">{label}</div>
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary/15 to-primary-2/10">
+        <UploadCloud className="h-5 w-5 text-primary" strokeWidth={1.75} />
+      </div>
+      <div className="mt-1 text-sm font-medium">{label}</div>
       <div className="text-xs text-muted-foreground">Drag & drop, or click to browse</div>
       {selectedFile && (
-        <div className="mt-2 rounded-md bg-muted px-2.5 py-1 text-xs">{selectedFile.name}</div>
+        <div className="label-mono mt-2 rounded-full bg-muted px-3 py-1 text-[10px]">{selectedFile.name}</div>
       )}
       <input
         ref={inputRef}

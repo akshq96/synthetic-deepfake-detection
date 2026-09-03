@@ -39,17 +39,17 @@ const NAV_SECTIONS: { title: string; items: { href: string; label: string; icon:
 
 function BrandMark() {
   return (
-    <svg viewBox="0 0 32 32" className="h-7 w-7 shrink-0" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="30" height="30" rx="7" stroke="var(--primary)" strokeWidth="1.5" />
-      <path
-        d="M9 16.5 14 21 23 10.5"
-        stroke="var(--primary)"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx="23" cy="10.5" r="2.5" fill="var(--background)" stroke="var(--primary)" strokeWidth="1.5" />
-    </svg>
+    <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary-2 shadow-[0_0_20px_-4px_var(--primary)]">
+      <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none">
+        <path
+          d="M4 9.5 8 13.5 16 5.5"
+          stroke="white"
+          strokeWidth="2.25"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </div>
   );
 }
 
@@ -57,16 +57,14 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-64 shrink-0 border-r border-border bg-card md:flex md:flex-col">
+    <aside className="hidden w-64 shrink-0 border-r border-border bg-card/60 backdrop-blur-xl md:flex md:flex-col">
       <Link href="/" className="flex items-center gap-2.5 px-5 py-6">
         <BrandMark />
         <span className="leading-tight">
-          <span className="block font-display text-[15px] font-semibold tracking-tight">
-            Aegis<span className="text-primary">Trace</span>
+          <span className="font-display gradient-text block text-[15px] font-semibold tracking-tight">
+            AegisTrace
           </span>
-          <span className="label-mono block text-[10px] text-muted-foreground">
-            Deepfake Forensics
-          </span>
+          <span className="block text-[10.5px] text-muted-foreground">Deepfake Forensics</span>
         </span>
       </Link>
 
@@ -85,16 +83,16 @@ export function Sidebar() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "relative flex items-center gap-2.5 rounded-md py-2 pl-3 pr-2.5 text-[13px] transition-colors",
+                      "relative flex items-center gap-2.5 rounded-lg py-2 px-3 text-[13px] transition-all",
                       active
-                        ? "bg-primary/[0.08] font-medium text-primary"
-                        : "text-foreground/75 hover:bg-muted hover:text-foreground"
+                        ? "bg-gradient-to-r from-primary/15 to-primary-2/10 font-medium text-foreground shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--primary)_35%,transparent)]"
+                        : "text-foreground/70 hover:bg-muted hover:text-foreground"
                     )}
                   >
-                    {active && (
-                      <span className="absolute left-0 top-1/2 h-4 w-[2.5px] -translate-y-1/2 rounded-full bg-primary" />
-                    )}
-                    <Icon className="h-[15px] w-[15px] shrink-0" strokeWidth={1.75} />
+                    <Icon
+                      className={cn("h-[15px] w-[15px] shrink-0", active && "text-primary")}
+                      strokeWidth={1.75}
+                    />
                     {item.label}
                   </Link>
                 );

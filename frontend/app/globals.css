@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
-/* Forensic/investigative identity: warm near-black + parchment, a gold
-   "evidence tag" accent instead of the default indigo/violet every AI
-   dashboard template ships with. Dark is the primary, designed-for theme;
-   light is a proper second pass, not an inverted afterthought. */
+/* Modern, vibrant dark UI — a violet→cyan gradient accent with soft glow,
+   subtle glass cards, and a glowing radial backdrop, instead of a flat
+   single-hue theme. Dark is the primary, designed-for theme. */
 
 :root {
-  --background: #f6f3ec;
-  --foreground: #1c1814;
+  --background: #f5f6fb;
+  --foreground: #14151f;
   --card: #ffffff;
-  --card-foreground: #1c1814;
-  --border: #e2dbc9;
-  --muted: #efe9da;
-  --muted-foreground: #766c59;
-  --primary: #a8701e;
-  --primary-foreground: #fffaf0;
-  --danger: #b23a3a;
-  --danger-foreground: #fff5f5;
-  --success: #2f7d52;
-  --warning: #a85a2a;
-  --ring: #a8701e;
+  --card-foreground: #14151f;
+  --border: #e2e4f0;
+  --muted: #eef0f8;
+  --muted-foreground: #676b85;
+  --primary: #7c5cff;
+  --primary-2: #22d3ee;
+  --primary-foreground: #ffffff;
+  --danger: #f43f5e;
+  --danger-foreground: #ffffff;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --ring: #7c5cff;
 }
 
 @theme inline {
@@ -31,6 +31,7 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-primary: var(--primary);
+  --color-primary-2: var(--primary-2);
   --color-primary-foreground: var(--primary-foreground);
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
@@ -44,54 +45,71 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0c0a08;
-    --foreground: #f1ead9;
-    --card: #16130f;
-    --card-foreground: #f1ead9;
-    --border: #2b251d;
-    --muted: #1c1712;
-    --muted-foreground: #a89b84;
-    --primary: #d6a13f;
-    --primary-foreground: #16130f;
-    --danger: #e2645f;
-    --danger-foreground: #16110f;
-    --success: #5cb583;
-    --warning: #e08a52;
-    --ring: #d6a13f;
+    --background: #08090f;
+    --foreground: #edeef8;
+    --card: #12131c;
+    --card-foreground: #edeef8;
+    --border: #23253355;
+    --muted: #191a26;
+    --muted-foreground: #9195b0;
+    --primary: #8b7bff;
+    --primary-2: #37e0e0;
+    --primary-foreground: #0a0a12;
+    --danger: #fb5a78;
+    --danger-foreground: #1a0a10;
+    --success: #34d399;
+    --warning: #fbb040;
+    --ring: #8b7bff;
   }
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(1100px 560px at 12% -8%, color-mix(in srgb, var(--primary) 20%, transparent), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, color-mix(in srgb, var(--primary-2) 14%, transparent), transparent 55%),
+    var(--background);
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
 h1, h2, h3 {
   font-family: var(--font-display), var(--font-sans), sans-serif;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, var(--primary), var(--primary-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .label-mono {
   font-family: var(--font-mono), monospace;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+.glow-ring {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 30%, transparent), 0 8px 30px -12px color-mix(in srgb, var(--primary) 55%, transparent);
 }
 
 .input {
   width: 100%;
-  border-radius: 0.375rem;
+  border-radius: 0.625rem;
   border: 1px solid var(--border);
   background: var(--card);
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
   color: var(--foreground);
   outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .input:focus-visible {
   border-color: var(--ring);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 25%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 20%, transparent);
 }
 
 * {
@@ -100,4 +118,16 @@ h1, h2, h3 {
 
 ::selection {
   background: color-mix(in srgb, var(--primary) 35%, transparent);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted-foreground) 30%, transparent);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
 }
