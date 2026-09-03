@@ -1,0 +1,28 @@
+# Same as cnn_baseline_debug.yaml but with synthetic augmentation enabled —
+# the "synthetic augmentation" condition to compare against the baseline
+# (ratio=0.0) condition once real experiments are run (Phase 5's
+# baseline_vs_synthetic.py). CPU debug scale, for fast local iteration.
+experiment_name: cnn_baseline
+run_name: cnn_synthetic_debug
+artifacts_root: artifacts
+mlflow_tracking_uri: null
+
+model:
+  name: efficientnetv2_s
+  pretrained: false
+  drop_rate: 0.0
+
+data:
+  manifest_path: data/manifests/fixture_split.parquet
+  image_size: 64
+  synthetic_ratio: 0.3
+  synthetic_techniques: [blend_warp, freq_perturb, compression_artifact, color_perturb]
+
+training:
+  debug: true
+  debug_n_samples: 6
+  epochs: 1
+  batch_size: 4
+  lr: 0.001
+  seed: 42
+  resume: null

@@ -121,11 +121,32 @@ def run_training(cfg) -> dict:
     set_seed(int(cfg.training.seed))
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    run_id = str(cfg.run_name)
+    artifacts_root = Path(cfg.get("artifacts_root", REPO_ROOT / "artifacts"))
+
     manifest = load_manifest(cfg.data.manifest_path)
     check_no_leakage(manifest)
 
     if bool(cfg.training.get("debug", False)):
         manifest = _debug_truncate(manifest, int(cfg.training.get("debug_n_samples", 8)))
+
+    synthetic_ratio = float(cfg.data.get("synthetic_ratio", 0.0))
+    if synthetic_ratio > 0.0:
+        from ml.synthetic.mixer import mix_into_manifest
+
+        synthetic_techniques = list(cfg.data.get("synthetic_techniques", []))
+        manifest = mix_into_manifest(
+            manifest,
+            ratio=synthetic_ratio,
+            techniques=synthetic_techniques,
+            output_dir=artifacts_root / "synthetic" / run_id,
+            seed=int(cfg.training.seed),
+        )
+        # Re-verify: synthetic rows inherit their source's identity/video/split
+        # by construction (see ml/synthetic/mixer.py), but re-checking after
+        # every manifest mutation is the whole point of this being a hard
+        # gate rather than a one-time check.
+        check_no_leakage(manifest)
 
     train_manifest = manifest[manifest["split"] == SPLIT_TRAIN]
     val_manifest = manifest[manifest["split"] == SPLIT_VAL]
@@ -145,8 +166,6 @@ def run_training(cfg) -> dict:
     model = build_model(cfg.model).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=float(cfg.training.lr))
 
-    run_id = str(cfg.run_name)
-    artifacts_root = Path(cfg.get("artifacts_root", REPO_ROOT / "artifacts"))
     ckpt_dir = checkpoint_dir(artifacts_root, run_id)
 
     start_epoch = 0
