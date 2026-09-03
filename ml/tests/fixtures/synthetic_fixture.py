@@ -33,10 +33,22 @@ def _make_image(seed: int) -> np.ndarray:
     return img
 
 
-def generate_fixture_dataset(root: Path, *, source_dataset: str = "fixture") -> pd.DataFrame:
+def generate_fixture_dataset(
+    root: Path,
+    *,
+    source_dataset: str = "fixture",
+    n_identities_per_label: int = N_IDENTITIES_PER_LABEL,
+    fake_manipulation_types: tuple[str, ...] = ("fixture_fake",),
+) -> pd.DataFrame:
     """Write fixture images under `root/images/` and return their manifest
     (without splits assigned — call ml.data_pipeline.split.assign_splits on
     the result, as a real pipeline run would).
+
+    `fake_manipulation_types`: when more than one is given, fake identities
+    are cycled through them (identity N gets type N % len(types)) — used by
+    the unseen-manipulation experiment tests to exercise leave-one-
+    manipulation-out evaluation on data that actually has manipulation-type
+    variety, which the default single-type fixture doesn't provide.
     """
     import cv2
 
@@ -47,8 +59,13 @@ def generate_fixture_dataset(root: Path, *, source_dataset: str = "fixture") -> 
     rows = []
     seed_counter = 0
     for label in (LABEL_REAL, LABEL_FAKE):
-        for identity_idx in range(N_IDENTITIES_PER_LABEL):
+        for identity_idx in range(n_identities_per_label):
             identity_id = f"{label}_identity_{identity_idx}"
+            manipulation_type = (
+                "none"
+                if label == LABEL_REAL
+                else fake_manipulation_types[identity_idx % len(fake_manipulation_types)]
+            )
             for video_idx in range(N_VIDEOS_PER_IDENTITY):
                 video_id = f"{identity_id}_video_{video_idx}"
                 for frame_idx in range(N_FRAMES_PER_VIDEO):
@@ -64,7 +81,7 @@ def generate_fixture_dataset(root: Path, *, source_dataset: str = "fixture") -> 
                             identity_id=identity_id,
                             file_path=str(file_path),
                             label=label,
-                            manipulation_type="none" if label == LABEL_REAL else "fixture_fake",
+                            manipulation_type=manipulation_type,
                             is_synthetic=False,
                             frame_index=frame_idx,
                             quality_ok=True,

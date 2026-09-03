@@ -14,8 +14,6 @@ from __future__ import annotations
 
 import argparse
 import random
-import sys
-import time
 from pathlib import Path
 
 import numpy as np
@@ -29,6 +27,7 @@ from ml.data_pipeline.leakage_check import check_no_leakage
 from ml.data_pipeline.manifest import load_manifest
 from ml.data_pipeline.schema import SPLIT_TEST, SPLIT_TRAIN, SPLIT_VAL
 from ml.datasets.image_dataset import ManifestImageDataset
+from ml.evaluation.evaluate import collect_logits
 from ml.evaluation.metrics import compute_metrics
 from ml.models.factory import build_model
 from ml.models.predictor import sweep_abstain_margin
@@ -101,22 +100,16 @@ def _run_epoch(
     return total_loss / max(n_batches, 1)
 
 
-@torch.no_grad()
-def _collect_logits(model: nn.Module, loader: DataLoader, *, device: torch.device):
-    model.eval()
-    all_logits, all_labels = [], []
-    for batch in loader:
-        images = batch["image"].to(device)
-        logits = model(images).squeeze(-1).cpu().numpy()
-        all_logits.append(logits)
-        all_labels.append(batch["label"].numpy())
-    return np.concatenate(all_logits), np.concatenate(all_labels)
-
-
-def run_training(cfg) -> dict:
+def run_training(cfg, *, manifest_override: pd.DataFrame | None = None) -> dict:
     """Execute one full training run per `cfg`. Returns a summary dict
     (final val metrics, checkpoint paths, mlflow run id) — used directly by
     tests/smoke tests without needing to shell out to the CLI.
+
+    `manifest_override`: if given, used instead of loading
+    `cfg.data.manifest_path` from disk — lets experiment scripts (unseen-
+    manipulation leave-one-out, cross-dataset) pass an in-memory-filtered
+    manifest without a temp-file round-trip. Still passed through the same
+    leakage check and debug/synthetic-mixing steps as the disk-loaded path.
     """
     set_seed(int(cfg.training.seed))
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -124,7 +117,7 @@ def run_training(cfg) -> dict:
     run_id = str(cfg.run_name)
     artifacts_root = Path(cfg.get("artifacts_root", REPO_ROOT / "artifacts"))
 
-    manifest = load_manifest(cfg.data.manifest_path)
+    manifest = manifest_override if manifest_override is not None else load_manifest(cfg.data.manifest_path)
     check_no_leakage(manifest)
 
     if bool(cfg.training.get("debug", False)):
@@ -202,7 +195,7 @@ def run_training(cfg) -> dict:
             val_loss = _run_epoch(model, val_loader, device=device, optimizer=None)
             global_step += len(train_loader)
 
-            val_logits, val_labels = _collect_logits(model, val_loader, device=device)
+            val_logits, val_labels = collect_logits(model, val_loader, device=device)
             val_probs = expit(val_logits)
             val_metrics = compute_metrics(val_labels, val_probs)
 
@@ -236,7 +229,7 @@ def run_training(cfg) -> dict:
                 )
 
         # Calibration + abstain-margin sweep, fit on the val set only.
-        val_logits, val_labels = _collect_logits(model, val_loader, device=device)
+        val_logits, val_labels = collect_logits(model, val_loader, device=device)
         calibration = fit_temperature(val_logits, val_labels)
         calibration.save(ckpt_dir / "temperature.json")
 
