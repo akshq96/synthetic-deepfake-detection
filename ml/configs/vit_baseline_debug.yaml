@@ -1,0 +1,29 @@
+# ViT debug config — proves ml/training/train.py is genuinely
+# architecture-agnostic: identical script, only model.name differs from
+# cnn_baseline_debug.yaml. ViT-Base expects 224x224 (patch16) input, so
+# image_size can't be shrunk the way the CNN debug config does; kept to a
+# tiny sample count instead to stay fast on CPU.
+experiment_name: vit_baseline
+run_name: vit_baseline_debug
+artifacts_root: artifacts
+mlflow_tracking_uri: null
+
+model:
+  name: vit_base_patch16_224
+  pretrained: false
+  drop_rate: 0.0
+
+data:
+  manifest_path: data/manifests/fixture_split.parquet
+  image_size: 224
+  synthetic_ratio: 0.0
+  synthetic_techniques: []
+
+training:
+  debug: true
+  debug_n_samples: 4
+  epochs: 1
+  batch_size: 2
+  lr: 0.0001
+  seed: 42
+  resume: null

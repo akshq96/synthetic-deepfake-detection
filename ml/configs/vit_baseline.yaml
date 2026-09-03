@@ -1,0 +1,25 @@
+# ViT baseline — real-run template (Colab/Kaggle GPU). Same shape as
+# cnn_baseline.yaml; requires a real, leakage-checked split manifest.
+experiment_name: vit_baseline
+run_name: vit_baseline_ffpp_v1
+artifacts_root: artifacts
+mlflow_tracking_uri: null
+
+model:
+  name: vit_base_patch16_224
+  pretrained: true
+  drop_rate: 0.1
+
+data:
+  manifest_path: data/manifests/ffpp_split.parquet
+  image_size: 224
+  synthetic_ratio: 0.0
+  synthetic_techniques: []
+
+training:
+  debug: false
+  epochs: 20
+  batch_size: 16
+  lr: 0.00005
+  seed: 42
+  resume: auto
