@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Data & artifacts (large / regenerable / gitignored per plan)
+/data/raw/**
+/data/processed/**
+/data/manifests/**
+/data/synthetic/**
+!/data/raw/.gitkeep
+!/data/processed/.gitkeep
+!/data/manifests/.gitkeep
+!/data/synthetic/.gitkeep
+/artifacts/**
+!/artifacts/.gitkeep
+
+# Env / secrets
+.env
+*.local
+
+# Backend
+backend/**/__pycache__/
+backend/.pytest_cache/
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env*.local
+frontend/coverage/
+
+# OS
+.DS_Store
+
+# Claude Code local session state
+.claude/
+
+# IDE
+.vscode/
+.idea/
+
+# MLflow local store (kept under artifacts/, already ignored)
+mlruns/
