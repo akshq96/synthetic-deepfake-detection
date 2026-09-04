@@ -54,8 +54,8 @@ test.describe("detect happy path (requires a running, configured backend)", () =
     await expect(verdict).toHaveText(/^(Real|Deepfake|Uncertain)$/);
     await expect(page.getByText(/% confidence/)).toBeVisible();
 
-    // Explainability heatmap image loaded (not the "No heatmap available" fallback).
+    // Grad-CAM 3-panel evidence loaded (not the "No heatmap available" fallback).
     await expect(page.getByText("No heatmap available")).not.toBeVisible();
-    await expect(page.locator('img[alt="Explainability heatmap"]')).toBeVisible();
+    await expect(page.getByRole("img", { name: "Overlay" })).toBeVisible();
   });
 });

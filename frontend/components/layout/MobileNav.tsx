@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/cn";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
@@ -64,7 +65,12 @@ export function MobileNav() {
                           )}
                         >
                           <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                          {item.label}
+                          <span className="flex-1">{item.label}</span>
+                          {item.isNew && (
+                            <Badge dot={false} className="shrink-0 px-1.5 py-0 text-[9px]">
+                              NEW
+                            </Badge>
+                          )}
                         </Link>
                       );
                     })}

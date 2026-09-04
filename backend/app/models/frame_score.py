@@ -1,3 +1,8 @@
+"""The full per-sampled-frame probability series for a video prediction —
+every entry `ml/video/pipeline.py`'s `analyze_video()` computes, not just the
+top-K subset that `SuspiciousFrame` persists. Powers the Detect page's
+frame-level probability chart. Video predictions only; empty for images."""
+
 from __future__ import annotations
 
 from sqlalchemy import Float, ForeignKey, Integer, String
@@ -7,8 +12,8 @@ from backend.app.db.base import Base
 from backend.app.models.experiment import _uuid
 
 
-class SuspiciousFrame(Base):
-    __tablename__ = "suspicious_frames"
+class FrameScore(Base):
+    __tablename__ = "frame_scores"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
     prediction_id: Mapped[str] = mapped_column(ForeignKey("predictions.id"), index=True)
@@ -16,10 +21,5 @@ class SuspiciousFrame(Base):
     frame_index: Mapped[int] = mapped_column(Integer)
     timestamp: Mapped[float] = mapped_column(Float)
     fake_probability: Mapped[float] = mapped_column(Float)
-    heatmap_path: Mapped[str | None] = mapped_column(String(1024), default=None)
-    # Blended overlay only, historically. Milestone B's Grad-CAM 3-panel view
-    # (Original/Heatmap/Overlay) adds these two alongside it.
-    original_path: Mapped[str | None] = mapped_column(String(1024), default=None)
-    heatmap_only_path: Mapped[str | None] = mapped_column(String(1024), default=None)
 
-    prediction: Mapped["Prediction"] = relationship("Prediction", back_populates="suspicious_frames")  # noqa: F821
+    prediction: Mapped["Prediction"] = relationship("Prediction", back_populates="frame_scores")  # noqa: F821

@@ -14,6 +14,7 @@ import torch
 from torch import nn
 
 from ml.data_pipeline.face_detector import FaceDetector, MediapipeFaceDetector
+from ml.data_pipeline.frame_sampling import video_frame_count
 from ml.datasets.image_dataset import default_transform
 from ml.models.predictor import Predictor
 from ml.training.calibrate import Calibration
@@ -21,7 +22,7 @@ from ml.video.aggregate import FramePrediction, aggregate_video, top_suspicious_
 from ml.video.extract_frames import sample_inference_frames, video_fps
 from ml.video.face_tracking import track_faces
 from ml.xai.interface import Explainer
-from ml.xai.overlay import save_overlay
+from ml.xai.overlay import save_heatmap_only, save_original, save_overlay
 
 
 @dataclass
@@ -31,6 +32,15 @@ class VideoAnalysisResult:
     n_tracks: int
     n_frames_sampled: int
     suspicious_frames: list[dict]
+    # Detect-page telemetry (Milestone B) — real measurements, not estimates.
+    n_frames_total: int
+    video_width: int
+    video_height: int
+    duration_seconds: float
+    # The FULL per-sampled-frame series (every tracked face-frame, not just
+    # the top-K suspicious subset above) — powers the frame-level probability
+    # chart. Each dict: track_id, frame_index, timestamp, fake_probability.
+    frame_scores: list[dict]
 
 
 def analyze_video(
@@ -52,8 +62,11 @@ def analyze_video(
 ) -> VideoAnalysisResult:
     face_detector = face_detector or MediapipeFaceDetector()
     fps = video_fps(video_path)
+    n_frames_total = video_frame_count(video_path)
+    duration_seconds = n_frames_total / fps if fps > 0 else 0.0
 
     frames = sample_inference_frames(video_path, frame_interval=frame_interval, max_frames=max_frames)
+    video_height, video_width = frames[0][1].shape[:2] if frames else (0, 0)
     tracks = track_faces(
         frames, face_detector=face_detector, fps=fps, crop_margin=crop_margin, crop_size=image_size
     )
@@ -83,6 +96,16 @@ def analyze_video(
     video_result = aggregate_video(frame_predictions, method=aggregation_method)
     suspicious = top_suspicious_frames(frame_predictions, k=top_k_suspicious)
 
+    frame_scores = [
+        {
+            "track_id": fp.track_id,
+            "frame_index": fp.frame_index,
+            "timestamp": fp.timestamp,
+            "fake_probability": fp.prediction.fake_probability,
+        }
+        for fp in frame_predictions
+    ]
+
     suspicious_out = []
     for fp in suspicious:
         entry = {
@@ -93,15 +116,24 @@ def analyze_video(
             "confidence": fp.prediction.confidence,
             "fake_probability": fp.prediction.fake_probability,
             "heatmap_path": None,
+            "original_path": None,
+            "heatmap_only_path": None,
         }
         if explainer is not None and heatmap_output_dir is not None:
             crop = crop_by_key[(fp.track_id, fp.frame_index)]
             image_rgb = cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)
             image_tensor = transform(image_rgb).unsqueeze(0)
             heatmap = explainer.explain(model, image_tensor, target_class=1)[0]
-            out_path = Path(heatmap_output_dir) / f"track{fp.track_id}_frame{fp.frame_index}.png"
-            save_overlay(crop, heatmap, out_path)
-            entry["heatmap_path"] = str(out_path)
+            stem = f"track{fp.track_id}_frame{fp.frame_index}"
+            overlay_path = Path(heatmap_output_dir) / f"{stem}.png"
+            save_overlay(crop, heatmap, overlay_path)
+            entry["heatmap_path"] = str(overlay_path)
+            original_path = Path(heatmap_output_dir) / f"{stem}_original.png"
+            save_original(crop, original_path)
+            entry["original_path"] = str(original_path)
+            heatmap_only_path = Path(heatmap_output_dir) / f"{stem}_heatmap.png"
+            save_heatmap_only(heatmap, crop.shape[:2], heatmap_only_path)
+            entry["heatmap_only_path"] = str(heatmap_only_path)
         suspicious_out.append(entry)
 
     return VideoAnalysisResult(
@@ -110,4 +142,9 @@ def analyze_video(
         n_tracks=video_result["n_tracks"],
         n_frames_sampled=len(frames),
         suspicious_frames=suspicious_out,
+        n_frames_total=n_frames_total,
+        video_width=video_width,
+        video_height=video_height,
+        duration_seconds=duration_seconds,
+        frame_scores=frame_scores,
     )

@@ -7,6 +7,7 @@ import {
   Legend,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -23,12 +24,14 @@ export function LineMetricChart({
   xKey,
   yLabel,
   height = 280,
+  referenceLine,
 }: {
   data: Record<string, number | string>[];
   series: string[];
   xKey: string;
   yLabel?: string;
   height?: number;
+  referenceLine?: { y: number; label: string };
 }) {
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -49,6 +52,14 @@ export function LineMetricChart({
           }}
         />
         <Legend wrapperStyle={{ fontSize: 12 }} />
+        {referenceLine && (
+          <ReferenceLine
+            y={referenceLine.y}
+            stroke="var(--muted-foreground)"
+            strokeDasharray="4 4"
+            label={{ value: referenceLine.label, fontSize: 11, fill: "var(--muted-foreground)", position: "right" }}
+          />
+        )}
         {series.map((key, i) => (
           <Line
             key={key}
@@ -57,6 +68,7 @@ export function LineMetricChart({
             stroke={SERIES_COLORS[i % SERIES_COLORS.length]}
             strokeWidth={2}
             dot={{ r: 3 }}
+            connectNulls={false}
           />
         ))}
       </LineChart>

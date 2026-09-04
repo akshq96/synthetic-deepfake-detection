@@ -8,6 +8,7 @@ import type {
   ExperimentOut,
   MlflowRunSummary,
   ModelCompareOut,
+  ModelInfo,
   PredictionOut,
   ReportOut,
   RobustnessResult,
@@ -85,17 +86,21 @@ export function staticUrl(relativePath: string): string {
 export const api = {
   health: () => getJson<{ status: string }>("/api/health"),
 
-  detectImage: (file: File) => {
+  detectImage: (file: File, modelRunId?: string | null) => {
     const form = new FormData();
     form.append("file", file);
+    if (modelRunId) form.append("model_run_id", modelRunId);
     return postForm<PredictionOut>("/api/detect/image", form);
   },
-  detectVideo: (file: File) => {
+  detectVideo: (file: File, modelRunId?: string | null) => {
     const form = new FormData();
     form.append("file", file);
+    if (modelRunId) form.append("model_run_id", modelRunId);
     return postForm<PredictionOut>("/api/detect/video", form);
   },
   getPrediction: (id: string) => getJson<PredictionOut>(`/api/detect/${id}`),
+  listPredictions: () => getJson<PredictionOut[]>("/api/detect"),
+  listModels: () => getJson<ModelInfo[]>("/api/models"),
 
   listExperiments: () => getJson<ExperimentOut[]>("/api/experiments"),
   getExperiment: (id: string) => getJson<ExperimentOut>(`/api/experiments/${id}`),

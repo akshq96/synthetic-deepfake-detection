@@ -1,17 +1,34 @@
 import { cn } from "@/lib/cn";
 import type { PredictionLabel } from "@/lib/types";
+import { AlertTriangle, HelpCircle, ShieldCheck } from "lucide-react";
 
 const LABEL_META: Record<
   PredictionLabel,
-  { text: string; color: string; bar: string; tint: string }
+  { text: string; color: string; bar: string; tint: string; icon: React.ElementType; description: string }
 > = {
-  real: { text: "Real", color: "text-success", bar: "bg-success", tint: "bg-success-tint" },
-  fake: { text: "Deepfake", color: "text-danger", bar: "bg-danger", tint: "bg-danger-tint" },
+  real: {
+    text: "Real",
+    color: "text-success",
+    bar: "bg-success",
+    tint: "bg-success-tint",
+    icon: ShieldCheck,
+    description: "No significant evidence of manipulation detected.",
+  },
+  fake: {
+    text: "Deepfake",
+    color: "text-danger",
+    bar: "bg-danger",
+    tint: "bg-danger-tint",
+    icon: AlertTriangle,
+    description: "Strong evidence of manipulation detected in the analyzed media.",
+  },
   abstain: {
     text: "Uncertain",
     color: "text-warning",
     bar: "bg-warning",
     tint: "bg-warning-tint",
+    icon: HelpCircle,
+    description: "Below the confidence threshold for a reliable verdict either way.",
   },
 };
 
@@ -25,45 +42,41 @@ export function ConfidenceGauge({
   fakeProbability: number;
 }) {
   const meta = LABEL_META[label];
+  const Icon = meta.icon;
   const realPct = (1 - fakeProbability) * 100;
   const fakePct = fakeProbability * 100;
 
   return (
     <div>
-      <div className={cn("inline-flex items-center gap-2 rounded px-2.5 py-1", meta.tint)}>
-        <span className={cn("h-2 w-2 rounded-full", meta.bar)} />
-        <span
-          data-slot="verdict"
-          className={cn("font-display text-[13px] font-semibold uppercase tracking-wide", meta.color)}
-        >
-          {meta.text}
+      <div className="flex items-start gap-3">
+        <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-full", meta.tint)}>
+          <Icon className={cn("h-5 w-5", meta.color)} />
         </span>
-      </div>
-      <div className="mono-value mt-2 text-[13px] text-muted-foreground">
-        {(confidence * 100).toFixed(1)}% confidence
+        <div>
+          <div
+            data-slot="verdict"
+            className={cn("font-display text-[19px] font-bold uppercase tracking-wide", meta.color)}
+          >
+            {meta.text}
+          </div>
+          <div className="mono-value mt-0.5 text-[13px] text-muted-foreground">
+            {(confidence * 100).toFixed(1)}% confidence
+          </div>
+        </div>
       </div>
 
-      <div className="mt-5 space-y-2.5">
-        <ProbabilityRow label="Real" pct={realPct} barClass="bg-success" />
-        <ProbabilityRow label="Deepfake" pct={fakePct} barClass="bg-danger" />
-      </div>
-    </div>
-  );
-}
+      <p className="mt-3 text-[13px] leading-relaxed text-foreground-secondary">{meta.description}</p>
 
-function ProbabilityRow({ label, pct, barClass }: { label: string; pct: number; barClass: string }) {
-  return (
-    <div className="flex items-center gap-3">
-      <span className="w-16 shrink-0 text-[12px] text-foreground-secondary">{label}</span>
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-        <div
-          className={cn("h-full rounded-full transition-all", barClass)}
-          style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}
-        />
+      <div className="mt-5">
+        <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-muted">
+          <div className="h-full bg-success transition-all" style={{ width: `${Math.max(0, Math.min(100, realPct))}%` }} />
+          <div className="h-full bg-danger transition-all" style={{ width: `${Math.max(0, Math.min(100, fakePct))}%` }} />
+        </div>
+        <div className="mono-value mt-2 flex items-center justify-between text-[12.5px]">
+          <span className="text-success">{realPct.toFixed(1)}% Real</span>
+          <span className="text-danger">{fakePct.toFixed(1)}% Deepfake</span>
+        </div>
       </div>
-      <span className="mono-value w-12 shrink-0 text-right text-[12px] text-foreground">
-        {pct.toFixed(1)}%
-      </span>
     </div>
   );
 }

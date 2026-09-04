@@ -1,10 +1,12 @@
 "use client";
 
+import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/cn";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandMark, Wordmark } from "./BrandMark";
 import { NAV_SECTIONS } from "./nav-data";
+import { ProfileBlock } from "./ProfileBlock";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -37,6 +39,11 @@ export function Sidebar() {
                   >
                     <Icon className={cn("h-4 w-4 shrink-0", active ? "text-primary" : "text-muted-foreground")} strokeWidth={1.75} />
                     <span className="truncate">{item.label}</span>
+                    {item.isNew && (
+                      <Badge dot={false} className="ml-auto shrink-0 px-1.5 py-0 text-[9px]">
+                        NEW
+                      </Badge>
+                    )}
                   </Link>
                 );
               })}
@@ -45,7 +52,7 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="meta-label border-t border-border px-5 py-3 text-[9.5px]">Research Build</div>
+      <ProfileBlock />
     </aside>
   );
 }

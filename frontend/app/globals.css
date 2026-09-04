@@ -53,8 +53,13 @@
   --font-display: var(--font-space-grotesk);
 }
 
+/* Dark palette applies two ways: automatically when the OS is dark and the
+   user hasn't explicitly chosen light (the media-query block, guarded by
+   :not([data-theme="light"])), or explicitly via the in-app ThemeToggle
+   (the [data-theme="dark"] block below) — so an explicit choice always wins
+   over system preference in both directions. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --background: #14171b;
     --foreground: #e9eaee;
     --foreground-secondary: #b0b4bd;
@@ -76,6 +81,29 @@
     --warning-tint: #2b2317;
     --ring: #6f97c4;
   }
+}
+
+:root[data-theme="dark"] {
+  --background: #14171b;
+  --foreground: #e9eaee;
+  --foreground-secondary: #b0b4bd;
+  --card: #1a1e23;
+  --card-foreground: #e9eaee;
+  --border: #2a2e35;
+  --border-strong: #3a3f48;
+  --muted: #20242a;
+  --muted-foreground: #9aa0aa;
+  --primary: #6f97c4;
+  --primary-hover: #83a7d0;
+  --primary-foreground: #0e1116;
+  --primary-tint: #1f2c3a;
+  --danger: #e0806f;
+  --danger-tint: #2c1c1a;
+  --success: #5cbf8c;
+  --success-tint: #17251e;
+  --warning: #dba75a;
+  --warning-tint: #2b2317;
+  --ring: #6f97c4;
 }
 
 body {

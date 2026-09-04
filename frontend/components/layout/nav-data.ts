@@ -6,15 +6,20 @@ import {
   Sparkles,
   FileText,
   History,
+  Video,
+  Bookmark,
 } from "lucide-react";
 
 export const NAV_SECTIONS: {
   title: string;
-  items: { href: string; label: string; icon: React.ElementType }[];
+  items: { href: string; label: string; icon: React.ElementType; isNew?: boolean }[];
 }[] = [
   {
     title: "Detect",
-    items: [{ href: "/detect", label: "Image / Video Detection", icon: ScanSearch }],
+    items: [
+      { href: "/detect", label: "Image / Video Detection", icon: ScanSearch },
+      { href: "/live", label: "Live Camera Detection", icon: Video, isNew: true },
+    ],
   },
   {
     title: "Research",
@@ -31,6 +36,7 @@ export const NAV_SECTIONS: {
     items: [
       { href: "/experiments", label: "Experiment History", icon: History },
       { href: "/reports", label: "Forensic Reports", icon: FileText },
+      { href: "/saved-analyses", label: "Saved Analyses", icon: Bookmark },
     ],
   },
 ];

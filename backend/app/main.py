@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.app.api import detect, experiments, mlflow_proxy, models_compare, reports, results
+from backend.app.api import detect, experiments, mlflow_proxy, models, models_compare, reports, results
 from backend.app.core.config import settings
 from backend.app.db.base import create_all_tables
 
@@ -41,6 +41,7 @@ app.include_router(detect.router)
 app.include_router(experiments.router)
 app.include_router(results.router)
 app.include_router(models_compare.router)
+app.include_router(models.router)
 app.include_router(reports.router)
 app.include_router(mlflow_proxy.router)
 

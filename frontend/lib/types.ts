@@ -9,6 +9,15 @@ export interface SuspiciousFrameOut {
   timestamp: number;
   fake_probability: number;
   heatmap_path: string | null;
+  original_path: string | null;
+  heatmap_only_path: string | null;
+}
+
+export interface FrameScoreOut {
+  track_id: number;
+  frame_index: number;
+  timestamp: number;
+  fake_probability: number;
 }
 
 export interface PredictionOut {
@@ -22,6 +31,30 @@ export interface PredictionOut {
   heatmap_path: string | null;
   created_at: string;
   suspicious_frames: SuspiciousFrameOut[];
+
+  // Detect-page telemetry (Milestone B) — null when not applicable to this
+  // input_type, or for rows predating this feature. Never fabricated: each
+  // comes straight from real instrumentation in ml/video/pipeline.py and
+  // backend/app/services/ml_bridge.py.
+  n_frames_total: number | null;
+  n_frames_analyzed: number | null;
+  video_width: number | null;
+  video_height: number | null;
+  duration_seconds: number | null;
+  processing_time_ms: number | null;
+  n_faces_detected: number | null;
+  model_run_id: string | null;
+  original_path: string | null;
+  heatmap_only_path: string | null;
+  frame_scores: FrameScoreOut[];
+}
+
+export interface ModelInfo {
+  run_id: string;
+  run_name: string;
+  model_name: string;
+  checkpoint_path: string;
+  is_default: boolean;
 }
 
 export interface RunOut {
