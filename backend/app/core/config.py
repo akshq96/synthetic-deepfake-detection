@@ -42,15 +42,19 @@ class Settings(BaseSettings):
     cors_allow_origins: list[str] = ["http://localhost:3000"]
     max_upload_size_bytes: int = 200 * 1024 * 1024  # 200 MB
 
-    # No checkpoint is bundled with this repo (no real dataset has been
-    # trained on yet — see README/docs/dataset_setup.md). Detect endpoints
-    # refuse to run rather than silently serving predictions from an
-    # untrained/random model, per the project's "never fabricate results"
-    # principle extended to the application layer. Set these once you have
-    # a real trained checkpoint (e.g. from ml.training.train).
-    default_checkpoint_path: str | None = None
+    # No dataset has been trained on yet in this repo (see
+    # README/docs/dataset_setup.md) — this project's own CNN/ViT checkpoints
+    # are pipeline-validation artifacts only, not real detectors. Rather than
+    # either fabricating results from an untrained model or refusing to run
+    # at all, the out-of-the-box default routes to a real, already-trained,
+    # publicly published deepfake classifier (ml/models/pretrained_detector.py)
+    # so /api/detect works meaningfully with zero setup. Point these at a
+    # real from-scratch checkpoint (e.g. from ml.training.train) once one
+    # exists, or select it per-request via the model registry
+    # (backend/app/api/models.py) / the Detect page's model selector.
+    default_checkpoint_path: str | None = "pretrained"
     default_calibration_path: str | None = None
-    default_model_name: str = "efficientnetv2_s"
+    default_model_name: str = "pretrained_vit_deepfake"
     default_image_size: int = 224
 
     @property

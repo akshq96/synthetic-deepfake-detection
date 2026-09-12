@@ -19,7 +19,7 @@ export function Button({ variant = "primary", className, children, ...props }: B
     <button
       className={cn(
         "inline-flex items-center justify-center gap-2 rounded-md px-3.5 py-2 text-[13px] font-medium",
-        "transition-colors disabled:opacity-50 disabled:pointer-events-none",
+        "transition-all duration-150 active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-offset-1 focus-visible:ring-offset-background",
         VARIANT_CLASSES[variant],
         className

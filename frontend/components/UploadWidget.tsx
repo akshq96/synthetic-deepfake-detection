@@ -45,12 +45,18 @@ export function UploadWidget({
       }}
       onClick={() => !disabled && inputRef.current?.click()}
       className={cn(
-        "flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed p-8 text-center transition-colors",
-        isDragOver ? "border-primary bg-primary-tint" : "border-border-strong hover:bg-muted/60",
+        "flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed p-8 text-center transition-all duration-200",
+        isDragOver ? "scale-[1.01] border-primary bg-primary-tint" : "border-border-strong hover:bg-muted/60",
         disabled && "cursor-not-allowed opacity-60"
       )}
     >
-      <UploadCloud className="mb-1.5 h-6 w-6 text-muted-foreground" strokeWidth={1.5} />
+      <UploadCloud
+        className={cn(
+          "mb-1.5 h-6 w-6 text-muted-foreground transition-transform duration-200",
+          isDragOver && "-translate-y-0.5"
+        )}
+        strokeWidth={1.5}
+      />
       <div className="text-[13.5px] font-medium">{label}</div>
       <div className="text-[12px] text-muted-foreground">Drag and drop, or click to browse</div>
       {hint && <div className="mt-2 text-[11px] text-muted-foreground/80">{hint}</div>}

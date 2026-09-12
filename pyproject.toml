@@ -35,6 +35,11 @@ torch = [
     "torch>=2.2",
     "torchvision>=0.17",
     "timm>=0.9.16",
+    # Backs the pretrained default detector (ml/models/pretrained_detector.py)
+    # — a real, already-trained public deepfake classifier used as the
+    # out-of-the-box detect model until this project's own checkpoint is
+    # trained on a real dataset.
+    "transformers>=4.40",
 ]
 xai = [
     "grad-cam>=1.5.0",

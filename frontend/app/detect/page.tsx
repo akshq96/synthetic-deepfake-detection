@@ -160,7 +160,7 @@ export default function DetectPage() {
       {mutation.isError && <ErrorState error={mutation.error} onRetry={() => setResult(null)} />}
 
       {result && previewUrl && (
-        <div className="space-y-6">
+        <div className="animate-fade-slide-up space-y-6">
           <Section
             title="Media"
             action={

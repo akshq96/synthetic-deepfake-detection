@@ -55,6 +55,15 @@ def _resolve_checkpoint(checkpoint_path: str | None, model_name: str | None) -> 
 @lru_cache(maxsize=4)
 def _load_model_cached(checkpoint_path: str, model_name: str) -> nn.Module:
     from ml.models.factory import ModelConfig
+    from ml.models.pretrained_detector import MODEL_NAME as PRETRAINED_MODEL_NAME
+    from ml.models.pretrained_detector import PretrainedViTDeepfakeDetector
+
+    if model_name == PRETRAINED_MODEL_NAME:
+        # Not one of this project's own trained checkpoints — a real,
+        # already-trained public model, downloaded fresh (cached by
+        # transformers locally after the first call). checkpoint_path is
+        # ignored for this model_name; see pretrained_detector.py.
+        return PretrainedViTDeepfakeDetector()
 
     return load_trained_model(checkpoint_path, ModelConfig(name=model_name, pretrained=False))
 
@@ -67,13 +76,37 @@ def get_predictor(
     if no override is given and none is configured."""
     resolved_checkpoint, resolved_model_name = _resolve_checkpoint(checkpoint_path, model_name)
     model = _load_model_cached(resolved_checkpoint, resolved_model_name)
-    calibration = (
-        load_calibration_if_exists(settings.default_calibration_path)
-        if settings.default_calibration_path
-        else Calibration.identity()
-    )
-    predictor = Predictor(model, calibration=calibration, abstain_margin=abstain_margin)
-    return predictor, resolved_model_name, settings.default_image_size
+    predictor = Predictor(model, calibration=_resolve_calibration(resolved_model_name), abstain_margin=abstain_margin)
+    return predictor, resolved_model_name, _resolve_image_size(resolved_model_name)
+
+
+def _resolve_calibration(model_name: str) -> Calibration:
+    """This project's own temperature-scaling calibration file (if
+    configured) was fit for the configured *custom-trained* checkpoint —
+    applying it to the pretrained wrapper model's already-trained softmax
+    output would miscalibrate it. The pretrained model's own output stands
+    un-recalibrated (identity)."""
+    from ml.models.pretrained_detector import MODEL_NAME as PRETRAINED_MODEL_NAME
+
+    if model_name == PRETRAINED_MODEL_NAME:
+        return Calibration.identity()
+    if settings.default_calibration_path:
+        return load_calibration_if_exists(settings.default_calibration_path)
+    return Calibration.identity()
+
+
+def _resolve_image_size(model_name: str) -> int:
+    """Preprocessing input size for a given model_name. Not simply
+    `settings.default_image_size` for every model — that global reflects
+    whatever the *configured default checkpoint* was trained at (e.g. 64px
+    for a fixture-scale debug run), which would badly downsample a real
+    photo before the pretrained ViT model (which expects full 224px detail)
+    ever sees it."""
+    from ml.models.pretrained_detector import MODEL_NAME as PRETRAINED_MODEL_NAME
+
+    if model_name == PRETRAINED_MODEL_NAME:
+        return 224
+    return settings.default_image_size
 
 
 def get_default_predictor(*, abstain_margin: float = 0.1) -> tuple[Predictor, str, int]:
@@ -136,18 +169,24 @@ def detect_image_array(
     original_path = None
     heatmap_only_path = None
     if save_heatmap:
-        explainer = get_explainer_for(resolved_model_name)
-        model = get_model_for(checkpoint_path, model_name)
-        heatmap = explainer.explain(model, image_tensor, target_class=1)[0]
-        overlay_out = settings.heatmaps_dir / f"{heatmap_stem}_heatmap.png"
-        save_overlay(image_bgr, heatmap, overlay_out)
-        heatmap_path = str(overlay_out)
         original_out = settings.heatmaps_dir / f"{heatmap_stem}_original.png"
         save_original(image_bgr, original_out)
         original_path = str(original_out)
-        heatmap_only_out = settings.heatmaps_dir / f"{heatmap_stem}_heatmap_only.png"
-        save_heatmap_only(heatmap, image_bgr.shape[:2], heatmap_only_out)
-        heatmap_only_path = str(heatmap_only_out)
+        try:
+            explainer = get_explainer_for(resolved_model_name)
+            model = get_model_for(checkpoint_path, model_name)
+            heatmap = explainer.explain(model, image_tensor, target_class=1)[0]
+            overlay_out = settings.heatmaps_dir / f"{heatmap_stem}_heatmap.png"
+            save_overlay(image_bgr, heatmap, overlay_out)
+            heatmap_path = str(overlay_out)
+            heatmap_only_out = settings.heatmaps_dir / f"{heatmap_stem}_heatmap_only.png"
+            save_heatmap_only(heatmap, image_bgr.shape[:2], heatmap_only_out)
+            heatmap_only_path = str(heatmap_only_out)
+        except ValueError:
+            # No explainer registered for this architecture (e.g. the
+            # pretrained wrapper model) — the verdict itself is unaffected,
+            # only the Grad-CAM evidence panels are omitted for this model.
+            pass
 
     n_faces_detected = len(MediapipeFaceDetector().detect(image_bgr)) if count_faces else None
     height, width = image_bgr.shape[:2]
@@ -205,12 +244,14 @@ def detect_video(
     start = time.perf_counter()
     resolved_checkpoint, resolved_model_name = _resolve_checkpoint(checkpoint_path, model_name)
     model = get_model_for(checkpoint_path, model_name)
-    calibration = (
-        load_calibration_if_exists(settings.default_calibration_path)
-        if settings.default_calibration_path
-        else Calibration.identity()
-    )
-    explainer = get_explainer_for(resolved_model_name) if save_heatmaps else None
+    calibration = _resolve_calibration(resolved_model_name)
+    try:
+        explainer = get_explainer_for(resolved_model_name) if save_heatmaps else None
+    except ValueError:
+        # No explainer registered for this architecture (e.g. the pretrained
+        # wrapper model) — suspicious frames still surface, just without
+        # Grad-CAM evidence for this model.
+        explainer = None
     heatmap_dir = settings.heatmaps_dir if save_heatmaps else None
 
     result = analyze_video(
@@ -219,7 +260,7 @@ def detect_video(
         calibration=calibration,
         explainer=explainer,
         heatmap_output_dir=heatmap_dir,
-        image_size=settings.default_image_size,
+        image_size=_resolve_image_size(resolved_model_name),
         top_k_suspicious=top_k_suspicious,
     )
 

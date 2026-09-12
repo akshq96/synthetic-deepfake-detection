@@ -51,8 +51,12 @@ export function StatsRow({
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      {stats.map((stat) => (
-        <div key={stat.label} className="flex items-center gap-2.5 rounded-lg border border-border px-3.5 py-3">
+      {stats.map((stat, i) => (
+        <div
+          key={stat.label}
+          style={{ animationDelay: `${i * 60}ms` }}
+          className="animate-fade-slide-up flex items-center gap-2.5 rounded-lg border border-border px-3.5 py-3"
+        >
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-tint text-primary">
             <stat.icon className="h-4 w-4" />
           </span>

@@ -30,7 +30,7 @@ export function SampleGallery({ onSelect, disabled }: { onSelect: (file: File) =
             disabled={disabled}
             onClick={() => pick(sample)}
             title={sample.label}
-            className="h-12 w-12 overflow-hidden rounded-md border border-border transition-opacity hover:opacity-80 disabled:opacity-40"
+            className="h-12 w-12 overflow-hidden rounded-md border border-border transition-all duration-150 hover:scale-105 hover:border-primary hover:shadow-sm disabled:pointer-events-none disabled:opacity-40"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={sample.path} alt={sample.label} className="h-full w-full object-cover" />

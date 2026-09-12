@@ -26,10 +26,32 @@ def _find_checkpoint_file(run_dir: Path) -> Path | None:
     return None
 
 
+PRETRAINED_RUN_ID = "pretrained-vit-deepfake"
+
+
 def _list_models_raw() -> list[dict]:
+    from ml.models.pretrained_detector import MODEL_NAME as PRETRAINED_MODEL_NAME
+    from ml.models.pretrained_detector import PRETRAINED_MODEL_ID
+
+    default_checkpoint = settings.default_checkpoint_path
+    default_model_name = settings.default_model_name
+
+    # A real, already-trained public model — not one of this project's own
+    # checkpoints under artifacts/checkpoints/, so it's synthesized here
+    # rather than discovered by scanning the filesystem below.
+    models = [
+        {
+            "run_id": PRETRAINED_RUN_ID,
+            "run_name": f"Pretrained ({PRETRAINED_MODEL_ID})",
+            "model_name": PRETRAINED_MODEL_NAME,
+            "checkpoint_path": "pretrained",
+            "is_default": default_model_name == PRETRAINED_MODEL_NAME,
+        }
+    ]
+
     checkpoints_root = settings.artifacts_root / "checkpoints"
     if not checkpoints_root.exists():
-        return []
+        return models
 
     # Cross-reference MLflow for a human-friendly run_name + model
     # architecture, best-effort — a checkpoint dir with no matching MLflow
@@ -49,9 +71,6 @@ def _list_models_raw() -> list[dict]:
     except Exception:
         run_info = {}
 
-    default_checkpoint = settings.default_checkpoint_path
-
-    models = []
     for run_dir in sorted(checkpoints_root.iterdir()):
         if not run_dir.is_dir():
             continue
@@ -65,7 +84,11 @@ def _list_models_raw() -> list[dict]:
             {
                 "run_id": run_id,
                 "run_name": info.get("run_name") or run_id,
-                "model_name": info.get("model_name") or settings.default_model_name,
+                # Falls back to this project's own default architecture, not
+                # settings.default_model_name — that setting may now point at
+                # the pretrained wrapper above, which is never what a
+                # filesystem-discovered checkpoint.pt actually is.
+                "model_name": info.get("model_name") or "efficientnetv2_s",
                 "checkpoint_path": checkpoint_path,
                 "is_default": checkpoint_path == default_checkpoint,
             }
