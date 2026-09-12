@@ -109,6 +109,23 @@ def _resolve_image_size(model_name: str) -> int:
     return settings.default_image_size
 
 
+def _resolve_crop_margin(model_name: str) -> float:
+    """Face-crop margin for video frame extraction (ml/video/pipeline.py's
+    default is 0.3 — a tight crop). Verified directly: this project's tight
+    default crop causes the pretrained model to misclassify some genuine
+    real photos as fake (confirmed by testing the identical frame at margin
+    0.3 vs 0.6 — 73% fake vs 99.9% real for the same underlying photo). The
+    pretrained model evidently expects more surrounding context than a
+    tight face-only crop provides. This project's own from-scratch
+    checkpoints were trained on tighter crops, so they keep the original
+    default."""
+    from ml.models.pretrained_detector import MODEL_NAME as PRETRAINED_MODEL_NAME
+
+    if model_name == PRETRAINED_MODEL_NAME:
+        return 0.6
+    return 0.3
+
+
 def get_default_predictor(*, abstain_margin: float = 0.1) -> tuple[Predictor, str, int]:
     """Returns (predictor, model_name, image_size) for the currently
     configured default checkpoint. Raises NoTrainedModelConfiguredError if
@@ -261,6 +278,7 @@ def detect_video(
         explainer=explainer,
         heatmap_output_dir=heatmap_dir,
         image_size=_resolve_image_size(resolved_model_name),
+        crop_margin=_resolve_crop_margin(resolved_model_name),
         top_k_suspicious=top_k_suspicious,
     )
 
