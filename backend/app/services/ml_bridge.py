@@ -56,14 +56,22 @@ def _resolve_checkpoint(checkpoint_path: str | None, model_name: str | None) -> 
 def _load_model_cached(checkpoint_path: str, model_name: str) -> nn.Module:
     from ml.models.factory import ModelConfig
     from ml.models.pretrained_detector import MODEL_NAME as PRETRAINED_MODEL_NAME
-    from ml.models.pretrained_detector import PretrainedViTDeepfakeDetector
+    from ml.models.pretrained_detector import ENSEMBLE_MODEL_NAME, EnsembleFakeDetector, PretrainedViTDeepfakeDetector
 
     if model_name == PRETRAINED_MODEL_NAME:
         # Not one of this project's own trained checkpoints — a real,
-        # already-trained public model, downloaded fresh (cached by
-        # transformers locally after the first call). checkpoint_path is
-        # ignored for this model_name; see pretrained_detector.py.
+        # already-trained public deepfake classifier, downloaded fresh
+        # (cached by transformers locally after the first call).
+        # checkpoint_path is ignored for this model_name; see
+        # pretrained_detector.py.
         return PretrainedViTDeepfakeDetector()
+
+    if model_name == ENSEMBLE_MODEL_NAME:
+        # Opt-in only (not the default — see pretrained_detector.py's
+        # docstring for the false-positive rate that disqualified it as
+        # one): combines the deepfake classifier above with a second public
+        # model for wholly-AI-generated (non-deepfake) images.
+        return EnsembleFakeDetector()
 
     return load_trained_model(checkpoint_path, ModelConfig(name=model_name, pretrained=False))
 
@@ -86,9 +94,9 @@ def _resolve_calibration(model_name: str) -> Calibration:
     applying it to the pretrained wrapper model's already-trained softmax
     output would miscalibrate it. The pretrained model's own output stands
     un-recalibrated (identity)."""
-    from ml.models.pretrained_detector import MODEL_NAME as PRETRAINED_MODEL_NAME
+    from ml.models.pretrained_detector import PRETRAINED_MODEL_NAMES
 
-    if model_name == PRETRAINED_MODEL_NAME:
+    if model_name in PRETRAINED_MODEL_NAMES:
         return Calibration.identity()
     if settings.default_calibration_path:
         return load_calibration_if_exists(settings.default_calibration_path)
@@ -102,9 +110,9 @@ def _resolve_image_size(model_name: str) -> int:
     for a fixture-scale debug run), which would badly downsample a real
     photo before the pretrained ViT model (which expects full 224px detail)
     ever sees it."""
-    from ml.models.pretrained_detector import MODEL_NAME as PRETRAINED_MODEL_NAME
+    from ml.models.pretrained_detector import PRETRAINED_MODEL_NAMES
 
-    if model_name == PRETRAINED_MODEL_NAME:
+    if model_name in PRETRAINED_MODEL_NAMES:
         return 224
     return settings.default_image_size
 
@@ -119,9 +127,9 @@ def _resolve_crop_margin(model_name: str) -> float:
     tight face-only crop provides. This project's own from-scratch
     checkpoints were trained on tighter crops, so they keep the original
     default."""
-    from ml.models.pretrained_detector import MODEL_NAME as PRETRAINED_MODEL_NAME
+    from ml.models.pretrained_detector import PRETRAINED_MODEL_NAMES
 
-    if model_name == PRETRAINED_MODEL_NAME:
+    if model_name in PRETRAINED_MODEL_NAMES:
         return 0.6
     return 0.3
 

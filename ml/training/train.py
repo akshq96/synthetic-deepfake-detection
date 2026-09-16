@@ -112,7 +112,11 @@ def run_training(cfg, *, manifest_override: pd.DataFrame | None = None) -> dict:
     leakage check and debug/synthetic-mixing steps as the disk-loaded path.
     """
     set_seed(int(cfg.training.seed))
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device(
+        "cuda" if torch.cuda.is_available()
+        else "mps" if torch.backends.mps.is_available()
+        else "cpu"
+    )
 
     run_id = str(cfg.run_name)
     artifacts_root = Path(cfg.get("artifacts_root", REPO_ROOT / "artifacts"))

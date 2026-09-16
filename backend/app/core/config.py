@@ -47,11 +47,16 @@ class Settings(BaseSettings):
     # are pipeline-validation artifacts only, not real detectors. Rather than
     # either fabricating results from an untrained model or refusing to run
     # at all, the out-of-the-box default routes to a real, already-trained,
-    # publicly published deepfake classifier (ml/models/pretrained_detector.py)
-    # so /api/detect works meaningfully with zero setup. Point these at a
-    # real from-scratch checkpoint (e.g. from ml.training.train) once one
-    # exists, or select it per-request via the model registry
-    # (backend/app/api/models.py) / the Detect page's model selector.
+    # publicly published deepfake classifier (ml/models/pretrained_detector.py's
+    # PretrainedViTDeepfakeDetector) so /api/detect works meaningfully with
+    # zero setup. An ensemble that also flags wholly-AI-generated (non-
+    # deepfake) images was tried as the default and reverted — verified to
+    # call ordinary real photos "fake" at 90%+ confidence often enough to be
+    # worse overall than this single model (see pretrained_detector.py's
+    # docstring); it's still available as an explicit opt-in via the model
+    # registry (backend/app/api/models.py) / the Detect page's model
+    # selector. Point default_checkpoint_path/default_model_name at a real
+    # from-scratch checkpoint (e.g. from ml.training.train) once one exists.
     default_checkpoint_path: str | None = "pretrained"
     default_calibration_path: str | None = None
     default_model_name: str = "pretrained_vit_deepfake"

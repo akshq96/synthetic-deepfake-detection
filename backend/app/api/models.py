@@ -27,26 +27,39 @@ def _find_checkpoint_file(run_dir: Path) -> Path | None:
 
 
 PRETRAINED_RUN_ID = "pretrained-vit-deepfake"
+PRETRAINED_ENSEMBLE_RUN_ID = "pretrained-ensemble-detector"
 
 
 def _list_models_raw() -> list[dict]:
+    from ml.models.pretrained_detector import AI_IMAGE_MODEL_ID, DEEPFAKE_MODEL_ID
+    from ml.models.pretrained_detector import ENSEMBLE_MODEL_NAME
     from ml.models.pretrained_detector import MODEL_NAME as PRETRAINED_MODEL_NAME
-    from ml.models.pretrained_detector import PRETRAINED_MODEL_ID
 
     default_checkpoint = settings.default_checkpoint_path
     default_model_name = settings.default_model_name
 
-    # A real, already-trained public model — not one of this project's own
-    # checkpoints under artifacts/checkpoints/, so it's synthesized here
-    # rather than discovered by scanning the filesystem below.
+    # Real, already-trained public models — not one of this project's own
+    # checkpoints under artifacts/checkpoints/, so these entries are
+    # synthesized here rather than discovered by scanning the filesystem
+    # below. The ensemble is opt-in only (not the default): it also catches
+    # wholly-AI-generated images the deepfake-only model misses, but its
+    # second sub-model has a real false-positive rate on ordinary photos —
+    # see pretrained_detector.py's docstring.
     models = [
         {
             "run_id": PRETRAINED_RUN_ID,
-            "run_name": f"Pretrained ({PRETRAINED_MODEL_ID})",
+            "run_name": f"Pretrained ({DEEPFAKE_MODEL_ID})",
             "model_name": PRETRAINED_MODEL_NAME,
             "checkpoint_path": "pretrained",
             "is_default": default_model_name == PRETRAINED_MODEL_NAME,
-        }
+        },
+        {
+            "run_id": PRETRAINED_ENSEMBLE_RUN_ID,
+            "run_name": f"Pretrained ensemble ({DEEPFAKE_MODEL_ID} + {AI_IMAGE_MODEL_ID}) — catches AI-art too, more false positives",
+            "model_name": ENSEMBLE_MODEL_NAME,
+            "checkpoint_path": "pretrained",
+            "is_default": default_model_name == ENSEMBLE_MODEL_NAME,
+        },
     ]
 
     checkpoints_root = settings.artifacts_root / "checkpoints"
